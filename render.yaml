@@ -1,0 +1,39 @@
+services:
+  # 1. FastAPI Backend Service
+  - type: web
+    name: research-backend
+    env: python
+    region: oregon
+    plan: starter
+    rootDir: backend
+    buildCommand: uv sync --frozen
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+  # 2. Django Frontend Web App
+  - type: web
+    name: research-frontend
+    env: python
+    region: oregon
+    plan: starter
+    rootDir: frontend
+    buildCommand: pip install -r requirements.txt || pip install django htmx-django requests gunicorn
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: research-backend
+          property: host
+      - key: SECRET_KEY
+        generateValue: true

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - DeepResearch OS{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-12 bg-surface-card border border-surface-border rounded-2xl p-8 shadow-2xl space-y-6">
+    <div class="text-center space-y-1">
+        <h1 class="text-xl font-bold text-zinc-100">Welcome Back</h1>
+        <p class="text-xs text-zinc-400">Sign in to your research workspace</p>
+    </div>
+
+    {% if error %}
+    <div class="p-3 bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs rounded-xl">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form action="/login" method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Work Email</label>
+            <input type="email" name="email" required placeholder="researcher@company.com" class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 placeholder:text-zinc-600">
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="block text-xs font-medium text-zinc-400">Password</label>
+                <a href="/forgot-password" class="text-[11px] text-zinc-400 hover:text-zinc-200">Forgot?</a>
+            </div>
+            <input type="password" name="password" required placeholder="••••••••••••" class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 placeholder:text-zinc-600">
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs shadow-sm transition">Sign In</button>
+    </form>
+
+    <div class="text-center text-xs text-zinc-500 pt-2 border-t border-zinc-900">
+        Don't have an account? <a href="/signup" class="text-zinc-300 hover:text-white font-medium">Create an Account</a>
+    </div>
+</div>
+{% endblock %}

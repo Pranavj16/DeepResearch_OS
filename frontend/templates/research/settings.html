@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & Account Preferences - DeepResearch OS{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto" x-data="{ activeSection: 'profile' }">
+
+    <!-- Header Section -->
+    <div class="border-b border-surface-border pb-6">
+        <h1 class="text-2xl font-bold text-zinc-100 tracking-tight flex items-center space-x-3">
+            <span class="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </span>
+            <span>Account Settings & Preferences</span>
+        </h1>
+        <p class="text-xs text-zinc-400 mt-1">Configure profile parameters, appearance mode, notification alerts, and API authorization keys.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Settings Nav Sidebar -->
+        <div class="space-y-1">
+            <button @click="activeSection = 'profile'" class="w-full text-left px-4 py-2 rounded-xl text-xs font-medium transition" :class="activeSection === 'profile' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'">
+                <span>User Profile</span>
+            </button>
+            <button @click="activeSection = 'appearance'" class="w-full text-left px-4 py-2 rounded-xl text-xs font-medium transition" :class="activeSection === 'appearance' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'">
+                <span>Appearance & Theme</span>
+            </button>
+            <button @click="activeSection = 'notifications'" class="w-full text-left px-4 py-2 rounded-xl text-xs font-medium transition" :class="activeSection === 'notifications' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'">
+                <span>Notifications & Alerts</span>
+            </button>
+            <button @click="activeSection = 'security'" class="w-full text-left px-4 py-2 rounded-xl text-xs font-medium transition" :class="activeSection === 'security' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'">
+                <span>Security & API Keys</span>
+            </button>
+        </div>
+
+        <!-- Section Content -->
+        <div class="md:col-span-3 space-y-6">
+            <!-- Section 1: User Profile -->
+            <div x-show="activeSection === 'profile'" class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-6">
+                <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider border-b border-zinc-900 pb-3">User Profile Information</h3>
+                
+                <form class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-medium text-zinc-400 mb-1.5">Email Address</label>
+                        <input type="email" value="{{ user_email }}" readonly class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-400 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-zinc-400 mb-1.5">Full Name</label>
+                        <input type="text" value="Senior AI Researcher" class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-zinc-500">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-zinc-400 mb-1.5">Organization Title</label>
+                        <input type="text" value="Lead RAG Systems Architect" class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-zinc-500">
+                    </div>
+
+                    <div class="pt-2 border-t border-zinc-900 flex justify-end">
+                        <button type="button" class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium shadow-sm transition">Save Profile Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Section 2: Appearance & Theme -->
+            <div x-show="activeSection === 'appearance'" class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-6" x-cloak>
+                <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider border-b border-zinc-900 pb-3">Appearance & Theme Settings</h3>
+                
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-medium text-zinc-400 mb-2">Interface Color Theme</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 rounded-xl border border-zinc-400 bg-surface-base flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <div class="font-semibold text-zinc-100">Notion / OpenAI Minimalist</div>
+                                    <div class="text-[10px] text-zinc-500 font-mono">#09090b monochrome canvas</div>
+                                </div>
+                                <span class="w-2 h-2 rounded-full bg-zinc-100"></span>
+                            </div>
+
+                            <div class="p-4 rounded-xl border border-zinc-800 bg-surface-base flex items-center justify-between opacity-50 cursor-not-allowed">
+                                <div>
+                                    <div class="font-semibold text-zinc-100">Light Mode</div>
+                                    <div class="text-[10px] text-zinc-500 font-mono">High contrast white canvas</div>
+                                </div>
+                                <span class="text-[10px] text-zinc-500 font-mono">Dark Only</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-zinc-400 mb-2">Typography & Density</label>
+                        <select class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none">
+                            <option value="geist">Geist & Geist Mono (Default)</option>
+                            <option value="inter">Inter Standard UI</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Notifications -->
+            <div x-show="activeSection === 'notifications'" class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-6" x-cloak>
+                <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider border-b border-zinc-900 pb-3">Notification Preferences</h3>
+                
+                <div class="space-y-3 text-xs">
+                    <label class="flex items-center justify-between p-3 rounded-xl bg-surface-base border border-zinc-800">
+                        <div>
+                            <div class="font-semibold text-zinc-200">Email Notification on Run Completion</div>
+                            <div class="text-[10px] text-zinc-500">Receive summary reports when research workflow finishes</div>
+                        </div>
+                        <input type="checkbox" checked class="text-zinc-100 rounded">
+                    </label>
+
+                    <label class="flex items-center justify-between p-3 rounded-xl bg-surface-base border border-zinc-800">
+                        <div>
+                            <div class="font-semibold text-zinc-200">Webhooks / Slack Alert Channel</div>
+                            <div class="text-[10px] text-zinc-500">Post event payload notifications to configured webhook</div>
+                        </div>
+                        <input type="checkbox" checked class="text-zinc-100 rounded">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section 4: Security & API Keys -->
+            <div x-show="activeSection === 'security'" class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-6" x-cloak>
+                <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider border-b border-zinc-900 pb-3">Security & Personal API Tokens</h3>
+                
+                <div class="space-y-4 text-xs">
+                    <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-zinc-200">Active Personal Access Token</span>
+                            <span class="text-[10px] font-mono text-zinc-400">Expires in 90 days</span>
+                        </div>
+                        <div class="font-mono text-zinc-200 bg-zinc-900 p-2 rounded-lg border border-zinc-800 truncate">
+                            dros_live_992a01f8293c847a9182
+                        </div>
+                    </div>
+
+                    <button type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition">Generate New API Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

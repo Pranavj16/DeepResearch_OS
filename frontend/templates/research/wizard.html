@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Launch Autonomous Research - DeepResearch OS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8" x-data="{ wizardStep: 1, provider: 'gemini', depth: 'deep', tokenBudget: 100000 }">
+
+    <!-- Header & Stepper -->
+    <div class="border-b border-surface-border pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-100 tracking-tight flex items-center space-x-3">
+                <span class="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                </span>
+                <span>Launch Autonomous Goal</span>
+            </h1>
+            <p class="text-xs text-zinc-400 mt-1">Configure multi-agent planner, claim extractor, and report synthesizer parameters.</p>
+        </div>
+
+        <!-- Stepper Indicator -->
+        <div class="flex items-center space-x-2 text-xs font-medium">
+            <span class="px-3 py-1 rounded-xl transition" :class="wizardStep === 1 ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'">1. Objective</span>
+            <span class="text-zinc-600">&rarr;</span>
+            <span class="px-3 py-1 rounded-xl transition" :class="wizardStep === 2 ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'">2. Configuration</span>
+            <span class="text-zinc-600">&rarr;</span>
+            <span class="px-3 py-1 rounded-xl transition" :class="wizardStep === 3 ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'">3. Review</span>
+        </div>
+    </div>
+
+    <form action="/research/create" method="POST" hx-post="/research/create" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-target="#active-research-container" hx-swap="outerHTML" class="bg-surface-card rounded-2xl border border-surface-border p-8 shadow-2xl space-y-6">
+        {% csrf_token %}
+
+        <!-- Step 1: Objective & Title -->
+        <div x-show="wizardStep === 1" class="space-y-6">
+            <div class="space-y-1">
+                <h2 class="text-sm font-semibold text-zinc-100">Step 1: Define Research Goal</h2>
+                <p class="text-xs text-zinc-400">Specify the project title and core research objective for the multi-agent planner.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1.5">Research Project Title</label>
+                    <input type="text" name="title" placeholder="e.g. Production Architecture for Multi-Agent RAG Platforms" required class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1.5">Deep Research Objective & Core Questions</label>
+                    <textarea name="objective" rows="6" placeholder="Describe key questions to answer, required factual evidence spans, target domain constraints..." required class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-600 leading-relaxed"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-zinc-900">
+                <button type="button" @click="wizardStep = 2" class="px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs shadow-md transition flex items-center space-x-2">
+                    <span>Next: Advanced Configuration</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: AI Provider & Search Configuration -->
+        <div x-show="wizardStep === 2" class="space-y-6" x-cloak>
+            <div class="space-y-1">
+                <h2 class="text-sm font-semibold text-zinc-100">Step 2: AI Providers & Parameters</h2>
+                <p class="text-xs text-zinc-400">Select specialist LLM models and crawling parameters for source discovery.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-2">Primary LLM Provider Engine</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center justify-between p-3 rounded-xl border bg-surface-base cursor-pointer transition" :class="provider === 'gemini' ? 'border-zinc-400 text-white' : 'border-zinc-800 text-zinc-400'">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" name="provider_choice" value="gemini" x-model="provider" class="text-zinc-100 focus:ring-zinc-500">
+                                <div>
+                                    <div class="text-xs font-medium">Google Gemini</div>
+                                    <div class="text-[10px] font-mono text-zinc-500">gemini-2.5-flash &bull; Ultra Fast</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-zinc-800 text-zinc-300 border border-zinc-700">Active</span>
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 rounded-xl border bg-surface-base cursor-pointer transition" :class="provider === 'groq' ? 'border-zinc-400 text-white' : 'border-zinc-800 text-zinc-400'">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" name="provider_choice" value="groq" x-model="provider" class="text-zinc-100 focus:ring-zinc-500">
+                                <div>
+                                    <div class="text-xs font-medium">Groq LPU</div>
+                                    <div class="text-[10px] font-mono text-zinc-500">llama-3.3-70b-versatile</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Ready</span>
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 rounded-xl border bg-surface-base cursor-pointer transition" :class="provider === 'nvidia' ? 'border-zinc-400 text-white' : 'border-zinc-800 text-zinc-400'">
+                            <div class="flex items-center space-x-3">
+                                <input type="radio" name="provider_choice" value="nvidia" x-model="provider" class="text-zinc-100 focus:ring-zinc-500">
+                                <div>
+                                    <div class="text-xs font-medium">NVIDIA NIM</div>
+                                    <div class="text-[10px] font-mono text-zinc-500">z-ai/glm-5.2 Deep Reasoning</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Ready</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-2">Web Crawl Depth</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-3 p-3 rounded-xl border bg-surface-base cursor-pointer transition" :class="depth === 'deep' ? 'border-zinc-400 text-white' : 'border-zinc-800 text-zinc-400'">
+                            <input type="radio" name="search_depth" value="deep" x-model="depth" class="text-zinc-100 focus:ring-zinc-500">
+                            <div>
+                                <div class="text-xs font-medium">Deep Multi-Page Crawl (Tavily + Firecrawl)</div>
+                                <div class="text-[10px] text-zinc-500">Extracts full page text, citations, and claim spans</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center space-x-3 p-3 rounded-xl border bg-surface-base cursor-pointer transition" :class="depth === 'fast' ? 'border-zinc-400 text-white' : 'border-zinc-800 text-zinc-400'">
+                            <input type="radio" name="search_depth" value="fast" x-model="depth" class="text-zinc-100 focus:ring-zinc-500">
+                            <div>
+                                <div class="text-xs font-medium">Fast Keyword Indexing</div>
+                                <div class="text-[10px] text-zinc-500">Rapid summary indexing for instant reports</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between pt-4 border-t border-zinc-900">
+                <button type="button" @click="wizardStep = 1" class="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-300 hover:bg-zinc-800 font-medium text-xs transition">Back</button>
+                <button type="button" @click="wizardStep = 3" class="px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs shadow-md transition flex items-center space-x-2">
+                    <span>Next: Review & Execute</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Review & Submit -->
+        <div x-show="wizardStep === 3" class="space-y-6" x-cloak>
+            <div class="space-y-1">
+                <h2 class="text-sm font-semibold text-zinc-100">Step 3: Review Execution Envelope</h2>
+                <p class="text-xs text-zinc-400">Confirm execution envelope parameters before compiling the LangGraph workflow graph.</p>
+            </div>
+
+            <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-3 text-xs font-mono">
+                <div class="flex justify-between border-b border-zinc-900 pb-2">
+                    <span class="text-zinc-500">Engine Architecture:</span>
+                    <span class="font-medium text-zinc-200">LangGraph StateGraph v2.0</span>
+                </div>
+                <div class="flex justify-between border-b border-zinc-900 pb-2">
+                    <span class="text-zinc-500">Primary Provider:</span>
+                    <span class="font-medium text-zinc-200 uppercase" x-text="provider"></span>
+                </div>
+                <div class="flex justify-between border-b border-zinc-900 pb-2">
+                    <span class="text-zinc-500">Crawl Strategy:</span>
+                    <span class="font-medium text-zinc-200" x-text="depth === 'deep' ? 'Deep Multi-Page Crawl' : 'Fast Summary Indexing'"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-zinc-500">Token Allocation Budget:</span>
+                    <span class="text-zinc-200 font-medium">100,000 Tokens Max</span>
+                </div>
+            </div>
+
+            <div id="active-research-container"></div>
+
+            <div class="flex justify-between pt-4 border-t border-zinc-900">
+                <button type="button" @click="wizardStep = 2" class="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-300 hover:bg-zinc-800 font-medium text-xs transition">Back</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs shadow-md transition flex items-center space-x-2">
+                    <span>Compile Graph & Run Engine</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

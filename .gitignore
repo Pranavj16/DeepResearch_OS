@@ -1,0 +1,43 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Markdown files (Exclude all .md files except README.md as requested)
+*.md
+**/*.md
+!README.md
+
+# Runtime data
+*.sqlite3
+*.db
+backend/logs/*
+!backend/logs/.gitkeep
+artifacts/
+uploads/
+
+# Test and tooling output
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,73 @@
+[project]
+name = "autonomous-research-platform-backend"
+version = "0.1.0"
+description = "Backend application for the Autonomous Multi-Agent Research Platform"
+readme = "README.md"
+authors = [
+    { name = "Pranavj16", email = "pranavj162008@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.14.1",
+    "asyncpg>=0.30.0",
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
+    "loguru>=0.7.3",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "pyjwt>=2.8.0",
+    "python-dotenv>=1.2.2",
+    "qdrant-client>=1.13.2",
+    "redis>=5.2.1",
+    "sqlalchemy[asyncio]>=2.0.38",
+    "uvicorn>=0.52.0",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "mypy>=1.18.2",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "ruff>=0.13.0",
+]
+
+[project.scripts]
+backend = "app.main:app"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# This is an application with a top-level ``app`` package, not an installable
+# distribution using uv_build's default ``src/<project-name>`` layout.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["app", "tests"]
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true

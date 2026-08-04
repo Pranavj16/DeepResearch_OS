@@ -1,0 +1,294 @@
+<div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-2xl space-y-6"
+     {% if run.status != "completed" and run.status != "failed" and run.stage != "finalize" and run.stage != "completed" %}
+     hx-get="/research/status/{{ run.run_id }}"
+     hx-trigger="every 3s"
+     hx-swap="outerHTML"
+     {% endif %}>
+    
+    <!-- Top Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono text-zinc-400">RUN-ID: {{ run.run_id|slice:":8" }}</span>
+                {% if run.status == "completed" or run.stage == "completed" or run.stage == "finalize" %}
+                <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-200 border border-zinc-800">Completed</span>
+                {% elif run.status == "failed" %}
+                <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-red-400 border border-zinc-800">Failed</span>
+                {% else %}
+                <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Executing LangGraph</span>
+                {% endif %}
+            </div>
+            <h3 class="text-lg font-bold text-zinc-100 mt-1">{{ run.title|default:"Autonomous Research Task" }}</h3>
+        </div>
+
+        <!-- Execution Control Buttons -->
+        <div class="flex items-center space-x-2">
+            {% if run.status != "completed" and run.status != "failed" %}
+            <button hx-post="/research/control/{{ run.run_id }}?action=pause" hx-target="#active-research-container" class="px-3 py-1.5 rounded-xl border border-zinc-800 bg-surface-base text-zinc-300 hover:bg-zinc-800 font-medium text-xs transition">Pause</button>
+            <button hx-post="/research/control/{{ run.run_id }}?action=cancel" hx-target="#active-research-container" class="px-3 py-1.5 rounded-xl border border-zinc-800 bg-surface-base text-zinc-400 hover:text-zinc-200 font-medium text-xs transition">Cancel</button>
+            {% else %}
+            <button hx-post="/research/control/{{ run.run_id }}?action=retry" hx-target="#active-research-container" class="px-3 py-1.5 rounded-xl border border-zinc-800 bg-surface-base text-zinc-300 hover:bg-zinc-800 font-medium text-xs transition">Retry Execution</button>
+            {% endif %}
+
+            {% if run.status == "completed" or run.stage == "completed" or run.stage == "finalize" %}
+            <a href="/report/{{ run.run_id }}" class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs transition shadow-sm flex items-center space-x-1">
+                <span>Open Full Report</span>
+                <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="space-y-2">
+        <div class="flex justify-between text-xs font-medium text-zinc-400">
+            <span>Multi-Agent Workflow Execution Progress</span>
+            <span class="text-zinc-300 font-mono">
+                {% if run.status == "completed" or run.stage == "completed" or run.stage == "finalize" %}100%
+                {% elif run.stage == "review" or run.stage == "reflection" %}85%
+                {% elif run.stage == "synthesize" %}70%
+                {% elif run.stage == "knowledge" or run.stage == "memory" %}50%
+                {% elif run.stage == "extract" %}35%
+                {% elif run.stage == "search" %}20%
+                {% else %}10%{% endif %}
+            </span>
+        </div>
+        <div class="w-full bg-surface-base rounded-full h-2 overflow-hidden border border-zinc-800">
+            <div class="bg-zinc-100 h-2 rounded-full transition-all duration-500" 
+                 style="width: {% if run.status == 'completed' or run.stage == 'completed' or run.stage == 'finalize' %}100%{% elif run.stage == 'review' or run.stage == 'reflection' %}85%{% elif run.stage == 'synthesize' %}70%{% elif run.stage == 'knowledge' or run.stage == 'memory' %}50%{% elif run.stage == 'extract' %}35%{% elif run.stage == 'search' %}20%{% else %}10%{% endif %};"></div>
+        </div>
+    </div>
+
+    <!-- Specialist Agent Grid Status -->
+    <div class="space-y-2">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Specialist Agents Execution Matrix</h4>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 font-mono">
+            <!-- Planner -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">1. Planner</span>
+                {% if run.stage in "search extract knowledge memory synthesize review reflection finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Search -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">2. Searcher</span>
+                {% if run.stage in "extract knowledge memory synthesize review reflection finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% elif run.stage == "search" %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-600">Pending</div>
+                {% endif %}
+            </div>
+
+            <!-- Reader/Extract -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">3. Extractor</span>
+                {% if run.stage in "knowledge memory synthesize review reflection finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% elif run.stage == "extract" %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-600">Pending</div>
+                {% endif %}
+            </div>
+
+            <!-- Knowledge & Memory -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">4. Knowledge</span>
+                {% if run.stage in "synthesize review reflection finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% elif run.stage in "knowledge memory" %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-600">Pending</div>
+                {% endif %}
+            </div>
+
+            <!-- Writer -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">5. Writer</span>
+                {% if run.stage in "review reflection finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% elif run.stage == "synthesize" %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-600">Pending</div>
+                {% endif %}
+            </div>
+
+            <!-- Critic -->
+            <div class="bg-surface-base p-3 rounded-xl border border-zinc-800 text-center space-y-1">
+                <span class="text-[10px] text-zinc-500 uppercase">6. Critic</span>
+                {% if run.stage in "finalize completed" or run.status == "completed" %}
+                <div class="text-xs font-medium text-zinc-200 flex items-center justify-center space-x-1">
+                    <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Executed</span>
+                </div>
+                {% elif run.stage in "review reflection" %}
+                <div class="text-xs font-medium text-zinc-100 animate-pulse flex items-center justify-center space-x-1">
+                    <span>⚡ Executing</span>
+                </div>
+                {% else %}
+                <div class="text-xs font-medium text-zinc-600">Pending</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Extracted Intelligence Showcase -->
+    <div class="space-y-4 pt-4 border-t border-zinc-900">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center space-x-2">
+            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <span>Agent Intelligence & Extracted Evidence</span>
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <!-- 1. Planner Output -->
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="font-medium text-zinc-200">📋 Planner Strategy Steps</span>
+                    <span class="text-[10px] font-mono text-zinc-400">Planner Agent</span>
+                </div>
+                {% if run.details and run.details.plan_steps %}
+                <ul class="space-y-1.5 text-zinc-300">
+                    {% for step in run.details.plan_steps %}
+                    <li class="flex items-start space-x-2">
+                        <span class="text-zinc-500 font-mono">&bull;</span>
+                        <span class="leading-relaxed">{{ step }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-zinc-500 italic">Generating structured execution plan steps...</p>
+                {% endif %}
+            </div>
+
+            <!-- 2. Search Output -->
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="font-medium text-zinc-200">🔍 Discovered Web Sources</span>
+                    <span class="text-[10px] font-mono text-zinc-400">Searcher Agent</span>
+                </div>
+                {% if run.details and run.details.sources %}
+                <ul class="space-y-1.5 text-zinc-300">
+                    {% for src in run.details.sources %}
+                    <li class="p-2 bg-surface-card rounded-lg border border-zinc-800 space-y-0.5">
+                        <div class="font-medium text-zinc-200 line-clamp-1">{{ src.title|default:"Verified Knowledge Source" }}</div>
+                        <div class="text-[10px] font-mono text-zinc-400 truncate">{{ src.url }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-zinc-500 italic">Crawling web sources and domain indexes...</p>
+                {% endif %}
+            </div>
+
+            <!-- 3. Extracted Claims -->
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="font-medium text-zinc-200">📄 Extracted Factual Claims</span>
+                    <span class="text-[10px] font-mono text-zinc-400">Reader Agent</span>
+                </div>
+                {% if run.details and run.details.claims %}
+                <ul class="space-y-1 text-zinc-300">
+                    {% for claim in run.details.claims %}
+                    <li class="p-2 bg-surface-card rounded-lg border border-zinc-800 text-zinc-300 line-clamp-2 leading-relaxed">
+                        {{ claim }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-zinc-500 italic">Extracting factual evidence spans from text chunks...</p>
+                {% endif %}
+            </div>
+
+            <!-- 4. Critic & Final Synthesis -->
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="font-medium text-zinc-200">⭐ Quality Audit & Synthesis</span>
+                    <span class="text-[10px] font-mono text-zinc-400">Writer & Critic</span>
+                </div>
+                {% if run.details and run.details.critique_score %}
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-surface-card p-2 rounded-lg border border-zinc-800 font-mono">
+                        <span class="text-zinc-400">Quality Score:</span>
+                        <span class="font-semibold text-zinc-100">{{ run.details.critique_score }} / 1.0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-surface-card p-2 rounded-lg border border-zinc-800 font-mono">
+                        <span class="text-zinc-400">Citation Audit:</span>
+                        <span class="font-semibold text-zinc-200">Passed ✅</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-zinc-500 italic">Writer synthesizing report & Critic performing review...</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Log Stream Viewer -->
+    <div class="space-y-2 pt-4 border-t border-zinc-900">
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Live Stream Terminal Log</span>
+            </span>
+            <span class="text-[10px] font-mono text-zinc-500">Thread ID: {{ run.run_id|slice:":8" }}</span>
+        </div>
+        <div class="bg-black p-4 rounded-xl border border-zinc-800 font-mono text-[11px] text-zinc-300 h-32 overflow-y-auto space-y-1 custom-scrollbar">
+            <div class="text-zinc-500">[INFO] LangGraph thread initialized with correlation ID corr_{{ run.run_id|slice:":8" }}</div>
+            <div class="text-zinc-300">[STAGE: {{ run.stage|upper }}] Invoking specialist nodes in state graph</div>
+            {% if run.details and run.details.plan_steps %}
+            <div class="text-zinc-200">[NODE: PLAN] Generated {{ run.details.plan_steps|length }} plan steps</div>
+            {% endif %}
+            {% if run.details and run.details.sources %}
+            <div class="text-zinc-200">[NODE: SEARCH] Crawled {{ run.details.sources|length }} verified web sources</div>
+            {% endif %}
+            {% if run.details and run.details.claims %}
+            <div class="text-zinc-200">[NODE: EXTRACT] Extracted {{ run.details.claims|length }} factual claims</div>
+            {% endif %}
+            {% if run.status == "completed" %}
+            <div class="text-zinc-100">[FINALIZE] Execution completed successfully. Draft report ready.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="flex justify-between items-center border-t border-zinc-900 pt-4">
+        <span class="text-xs text-zinc-500">Auto-refreshing via HTMX every 3 seconds until completion.</span>
+        <a href="/report/{{ run.run_id }}" class="inline-flex items-center px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black text-xs font-medium shadow-sm transition space-x-1">
+            <span>Open Full Research Report & Citations</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+</div>

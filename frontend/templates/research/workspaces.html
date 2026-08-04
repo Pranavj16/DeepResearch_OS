@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Workspaces & Team Governance - DeepResearch OS{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto" x-data="{ inviteModalOpen: false, activeTab: 'workspaces' }">
+
+    <!-- Header Topbar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-100 tracking-tight flex items-center space-x-3">
+                <span class="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 002 2m4 0v4m0 0h-4m4 0h2"/></svg>
+                </span>
+                <span>Workspaces & Governance</span>
+            </h1>
+            <p class="text-zinc-400 text-xs mt-1">Manage tenant workspaces, team membership, token quotas, and Role-Based Access Control (RBAC).</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button @click="inviteModalOpen = true" class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs transition shadow-sm flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span>Invite Team Member</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex space-x-2 border-b border-surface-border pb-1 text-xs font-medium">
+        <button @click="activeTab = 'workspaces'" class="px-4 py-2 rounded-xl transition" :class="activeTab === 'workspaces' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">Active Workspaces</button>
+        <button @click="activeTab = 'members'" class="px-4 py-2 rounded-xl transition" :class="activeTab === 'members' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">Team Members & RBAC</button>
+        <button @click="activeTab = 'quotas'" class="px-4 py-2 rounded-xl transition" :class="activeTab === 'quotas' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">Resource Quotas & Usage</button>
+    </div>
+
+    <!-- Tab 1: Active Workspaces -->
+    <div x-show="activeTab === 'workspaces'" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Workspace 1 -->
+            <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4 hover:border-zinc-700 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-mono text-zinc-400 font-medium uppercase">Default Tenant</span>
+                        <h3 class="text-sm font-semibold text-zinc-100 mt-1">Core AI Research Workspace</h3>
+                    </div>
+                    <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Active</span>
+                </div>
+                <p class="text-xs text-zinc-400 leading-relaxed">Primary research environment for multi-agent execution, vector collections, and report persistent storage.</p>
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400 pt-2 border-t border-zinc-900 font-mono">
+                    <div>Members: <strong class="text-zinc-200">12</strong></div>
+                    <div>Env: <strong class="text-zinc-200">Production</strong></div>
+                    <div>Token Budget: <strong class="text-zinc-200">1M / mo</strong></div>
+                    <div>Your Role: <strong class="text-zinc-200">Owner</strong></div>
+                </div>
+            </div>
+
+            <!-- Workspace 2 -->
+            <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4 hover:border-zinc-700 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-mono text-zinc-500 font-medium uppercase">Development Scope</span>
+                        <h3 class="text-sm font-semibold text-zinc-100 mt-1">Experimental Sandbox</h3>
+                    </div>
+                    <span class="px-2 py-0.5 text-[9px] font-mono rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Sandbox</span>
+                </div>
+                <p class="text-xs text-zinc-400 leading-relaxed">Testing ground for experimental LLM provider models and tool registry extensions.</p>
+                <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400 pt-2 border-t border-zinc-900 font-mono">
+                    <div>Members: <strong class="text-zinc-200">4</strong></div>
+                    <div>Env: <strong class="text-zinc-200">Staging</strong></div>
+                    <div>Token Budget: <strong class="text-zinc-200">250K / mo</strong></div>
+                    <div>Your Role: <strong class="text-zinc-200">Admin</strong></div>
+                </div>
+            </div>
+
+            <!-- Create New Workspace Card -->
+            <div class="bg-surface-base rounded-2xl border border-dashed border-zinc-800 p-6 flex flex-col items-center justify-center text-center space-y-2 hover:border-zinc-600 transition cursor-pointer">
+                <div class="w-9 h-9 rounded-xl bg-surface-card border border-zinc-800 text-zinc-300 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </div>
+                <div class="font-semibold text-xs text-zinc-200">Create New Workspace</div>
+                <p class="text-[10px] text-zinc-500">Provision dedicated tenant boundaries and policy snapshots.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Team Members & RBAC -->
+    <div x-show="activeTab === 'members'" class="space-y-4" x-cloak>
+        <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+                <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Workspace Members & Role Permissions</h3>
+                <span class="text-xs font-mono text-zinc-500">3 Total Users</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-zinc-300">
+                    <thead class="bg-surface-base text-zinc-500 uppercase font-mono text-[10px] border-b border-zinc-800">
+                        <tr>
+                            <th class="p-3">User Principal</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3">Permissions</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-900">
+                        <tr>
+                            <td class="p-3">
+                                <div class="font-semibold text-zinc-100">{{ user_email }}</div>
+                                <div class="text-[10px] text-zinc-500 font-mono">Owner &bull; Primary Administrator</div>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 text-[9px] font-mono uppercase rounded bg-zinc-900 text-zinc-200 border border-zinc-800">Owner</span>
+                            </td>
+                            <td class="p-3 text-[11px] font-mono text-zinc-400">ALL (*)</td>
+                            <td class="p-3"><span class="text-zinc-300 font-medium">Active</span></td>
+                            <td class="p-3 text-right"><span class="text-zinc-500 text-[10px]">Owner (Current)</span></td>
+                        </tr>
+                        <tr>
+                            <td class="p-3">
+                                <div class="font-semibold text-zinc-100">alice.researcher@company.com</div>
+                                <div class="text-[10px] text-zinc-500 font-mono font-normal">Senior AI Scientist</div>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 text-[9px] font-mono uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Researcher</span>
+                            </td>
+                            <td class="p-3 text-[11px] font-mono text-zinc-400">research:run, research:read</td>
+                            <td class="p-3"><span class="text-zinc-300 font-medium">Active</span></td>
+                            <td class="p-3 text-right">
+                                <button class="text-xs text-zinc-400 hover:text-zinc-200 underline">Edit Role</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-3">
+                                <div class="font-semibold text-zinc-100">bob.auditor@company.com</div>
+                                <div class="text-[10px] text-zinc-500 font-mono font-normal">Compliance Reviewer</div>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 text-[9px] font-mono uppercase rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Viewer</span>
+                            </td>
+                            <td class="p-3 text-[11px] font-mono text-zinc-400">research:read</td>
+                            <td class="p-3"><span class="text-zinc-400 font-medium">Pending Invite</span></td>
+                            <td class="p-3 text-right">
+                                <button class="text-xs text-red-400 hover:underline">Revoke</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Quotas & Resource Allocation -->
+    <div x-show="activeTab === 'quotas'" class="space-y-4" x-cloak>
+        <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
+            <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Resource Allocation & Token Quotas</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+                <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                    <div class="text-zinc-500">Monthly Token Quota</div>
+                    <div class="text-xl font-semibold text-zinc-100">450,000 / 1,000,000</div>
+                    <div class="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+                        <div class="bg-zinc-100 h-2 rounded-full" style="width: 45%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                    <div class="text-zinc-500">Active Concurrency Limit</div>
+                    <div class="text-xl font-semibold text-zinc-100">5 / 10 Jobs</div>
+                    <div class="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+                        <div class="bg-zinc-100 h-2 rounded-full" style="width: 50%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                    <div class="text-zinc-500">Vector Store Index</div>
+                    <div class="text-xl font-semibold text-zinc-100">12,400 Chunks</div>
+                    <div class="text-[10px] text-zinc-500">Qdrant Collection: research_v2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Member Modal -->
+    <div x-show="inviteModalOpen" @keydown.window.escape="inviteModalOpen = false" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" x-cloak>
+        <div @click.away="inviteModalOpen = false" class="bg-surface-card border border-surface-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+                <h3 class="text-sm font-semibold text-zinc-100">Invite Team Member</h3>
+                <button @click="inviteModalOpen = false" class="text-zinc-500 hover:text-white">&times;</button>
+            </div>
+            
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1.5">Work Email</label>
+                    <input type="email" placeholder="colleague@company.com" required class="w-full bg-surface-base border border-zinc-800 rounded-xl px-4 py-2 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1.5">Assign Role</label>
+                    <select class="w-full bg-surface-base border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none">
+                        <option value="researcher">Researcher (Run & Read)</option>
+                        <option value="admin">Admin (Manage Workspace)</option>
+                        <option value="viewer">Viewer (Read Only)</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-zinc-900">
+                    <button type="button" @click="inviteModalOpen = false" class="px-4 py-2 rounded-xl border border-zinc-800 text-xs text-zinc-400 hover:bg-zinc-900">Cancel</button>
+                    <button type="submit" @click.prevent="inviteModalOpen = false" class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs shadow-sm">Send Invitation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

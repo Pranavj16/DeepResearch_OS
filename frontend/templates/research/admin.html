@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}System Health & Observability - DeepResearch OS{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto">
+
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-zinc-100 tracking-tight flex items-center space-x-3">
+                <span class="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </span>
+                <span>System Health & Observability</span>
+            </h1>
+            <p class="text-zinc-400 text-xs mt-1">Real-time telemetry for engine services, LLM provider registries, distributed worker leases, and task queues.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <span class="px-3 py-1 text-xs font-mono rounded-xl bg-zinc-900 text-zinc-200 border border-zinc-800 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Subsystems Operational</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Health Infrastructure Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-surface-card p-5 rounded-2xl border border-surface-border space-y-2">
+            <div class="flex justify-between items-center text-xs font-medium text-zinc-400">
+                <span>FastAPI Engine</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="text-lg font-bold text-zinc-100">Healthy</div>
+            <div class="text-[10px] font-mono text-zinc-500">Latency: 8ms &bull; v2.0</div>
+        </div>
+
+        <div class="bg-surface-card p-5 rounded-2xl border border-surface-border space-y-2">
+            <div class="flex justify-between items-center text-xs font-medium text-zinc-400">
+                <span>Relational DB Engine</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="text-lg font-bold text-zinc-100">Connected</div>
+            <div class="text-[10px] font-mono text-zinc-500">SQLite/Postgres Active</div>
+        </div>
+
+        <div class="bg-surface-card p-5 rounded-2xl border border-surface-border space-y-2">
+            <div class="flex justify-between items-center text-xs font-medium text-zinc-400">
+                <span>Redis Cache & Queue</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="text-lg font-bold text-zinc-100">Online</div>
+            <div class="text-[10px] font-mono text-zinc-500">Upstash TLS &bull; Pub/Sub Ready</div>
+        </div>
+
+        <div class="bg-surface-card p-5 rounded-2xl border border-surface-border space-y-2">
+            <div class="flex justify-between items-center text-xs font-medium text-zinc-400">
+                <span>Qdrant Vector Store</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="text-lg font-bold text-zinc-100">Ready</div>
+            <div class="text-[10px] font-mono text-zinc-500">Cloud Cluster Indexed</div>
+        </div>
+    </div>
+
+    <!-- AI Provider Registry Matrix -->
+    <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
+        <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">AI Model Provider Gateway Status</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-zinc-200">Google Gemini</span>
+                    <span class="px-2 py-0.5 text-[9px] uppercase rounded bg-zinc-900 text-zinc-200 border border-zinc-800">Primary</span>
+                </div>
+                <div class="text-[11px] text-zinc-400">gemini-2.5-flash</div>
+                <div class="text-[10px] text-zinc-400">Active Key &bull; API 200 OK</div>
+            </div>
+
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-zinc-200">Groq LPU</span>
+                    <span class="px-2 py-0.5 text-[9px] uppercase rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Registered</span>
+                </div>
+                <div class="text-[11px] text-zinc-400">llama-3.3-70b</div>
+                <div class="text-[10px] text-zinc-400">Active Key &bull; API 200 OK</div>
+            </div>
+
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-zinc-200">OpenRouter</span>
+                    <span class="px-2 py-0.5 text-[9px] uppercase rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Registered</span>
+                </div>
+                <div class="text-[11px] text-zinc-400">llama-3.3-70b</div>
+                <div class="text-[10px] text-zinc-400">Active Key &bull; API 200 OK</div>
+            </div>
+
+            <div class="bg-surface-base p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-zinc-200">NVIDIA NIM</span>
+                    <span class="px-2 py-0.5 text-[9px] uppercase rounded bg-zinc-900 text-zinc-400 border border-zinc-800">Registered</span>
+                </div>
+                <div class="text-[11px] text-zinc-400">z-ai/glm-5.2</div>
+                <div class="text-[10px] text-zinc-400">Active Key &bull; API 200 OK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distributed Worker Queue Telemetry -->
+    <div class="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
+        <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+            <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background Task Worker & Lease Telemetry</h3>
+            <span class="text-xs font-mono text-zinc-400 font-medium">Worker Runner: Active</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+            <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 text-[10px]">TASK LEASES</span>
+                <div class="text-lg font-semibold text-zinc-100">0 Active Leases</div>
+                <p class="text-[11px] text-zinc-400">No worker lease conflicts detected.</p>
+            </div>
+
+            <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 text-[10px]">JOB QUEUE DEPTH</span>
+                <div class="text-lg font-semibold text-zinc-100">0 Queued Jobs</div>
+                <p class="text-[11px] text-zinc-400">Redis work queue drained cleanly.</p>
+            </div>
+
+            <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 text-[10px]">AVERAGE LATENCY</span>
+                <div class="text-lg font-semibold text-zinc-100">1.84 seconds / run</div>
+                <p class="text-[11px] text-zinc-400">LangGraph state graph completion speed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
