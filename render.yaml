@@ -1,5 +1,5 @@
 services:
-  # 1. FastAPI Backend Service (FREE TIER)
+  # 1. FastAPI Backend Service (100% FREE TIER)
   - type: web
     name: research-backend
     env: python
@@ -14,13 +14,13 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: TAVILY_API_KEY
-        sync: false
+        value: ""
       - key: FIRECRAWL_API_KEY
-        sync: false
+        value: ""
       - key: SECRET_KEY
         generateValue: true
 
-  # 2. Django Frontend Web App (FREE TIER)
+  # 2. Django Frontend Web App (100% FREE TIER)
   - type: web
     name: research-frontend
     env: python
