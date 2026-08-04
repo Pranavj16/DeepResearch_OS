@@ -6,8 +6,12 @@ import requests
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
+import os
 
-BACKEND_API_URL = "http://127.0.0.1:8000/api/v1"
+raw_backend_url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+if raw_backend_url and not raw_backend_url.startswith("http"):
+    raw_backend_url = f"https://{raw_backend_url}"
+BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
 
 def require_auth(view_func: Any) -> Any:
