@@ -1,5 +1,5 @@
 services:
-  # 1. FastAPI Backend Service (100% FREE TIER)
+  # FastAPI Backend Service Only (100% FREE TIER)
   - type: web
     name: research-backend
     env: python
@@ -43,23 +43,5 @@ services:
         sync: false
 
       # Security
-      - key: SECRET_KEY
-        generateValue: true
-
-  # 2. Django Frontend Web App (100% FREE TIER)
-  - type: web
-    name: research-frontend
-    env: python
-    region: oregon
-    plan: free
-    rootDir: frontend
-    buildCommand: pip install -r requirements.txt || pip install django htmx-django requests gunicorn
-    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
-    envVars:
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: research-backend
-          property: host
       - key: SECRET_KEY
         generateValue: true
