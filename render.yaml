@@ -11,12 +11,40 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+
+      # Default Provider & Model
+      - key: DEFAULT_PROVIDER
+        value: gemini
+      - key: DEFAULT_MODEL
+        value: gemini-2.5-flash
+
+      # AI Provider Keys
       - key: GEMINI_API_KEY
         sync: false
+      - key: GROQ_API_KEY
+        value: ""
+      - key: NVIDIA_API_KEY
+        value: ""
+      - key: OPENROUTER_API_KEY
+        value: ""
+
+      # Search & Crawling Keys
       - key: TAVILY_API_KEY
         value: ""
       - key: FIRECRAWL_API_KEY
         value: ""
+
+      # Database, Cache & Vector Store
+      - key: DATABASE_URL
+        value: ""
+      - key: REDIS_URL
+        value: ""
+      - key: QDRANT_URL
+        value: ""
+      - key: QDRANT_API_KEY
+        value: ""
+
+      # Security
       - key: SECRET_KEY
         generateValue: true
 
