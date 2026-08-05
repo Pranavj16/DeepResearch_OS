@@ -24,7 +24,7 @@ class FrontendViewsTestCase(TestCase):
     def test_live_execution_view(self) -> None:
         response = self.client.get('/research/live/sample-run-123')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '8 Agents Matrix & LangGraph')
+        self.assertContains(response, '8 Specialist Agents')
 
     def test_events_stream_proxy_view(self) -> None:
         response = self.client.get('/api/v1/events/stream/sample-run-123')

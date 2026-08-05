@@ -3,7 +3,7 @@
 {% block title %}Live Agent Execution - {{ run.title|default:"Autonomous Multi-Agent Research" }}{% endblock %}
 
 {% block content %}
-<div class="space-y-6 max-w-7xl mx-auto" x-data="executionApp('{{ run.run_id }}')" x-init="initSSE()">
+<div class="space-y-6 max-w-7xl mx-auto" x-data="executionApp('{{ run.run_id }}', '{{ run.status|default:"running" }}', '{{ run.stage|default:"intake" }}')" x-init="initApp()">
 
     <!-- Top System & Control Telemetry Header -->
     <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-2xl space-y-4">
@@ -98,63 +98,38 @@
             <div class="flex justify-between text-xs font-medium text-zinc-400">
                 <span class="flex items-center space-x-2">
                     <span>Workflow Progress:</span>
-                    <strong class="text-zinc-100" x-text="progressStageLabel">Initializing Agents...</strong>
+                    <span class="font-mono text-zinc-200 font-bold" x-text="progressPercent + '%'"></span>
                 </span>
-                <span class="font-mono text-zinc-300" x-text="progressPercent + '%'">0%</span>
+                <span class="font-mono text-brand-400 font-semibold" x-text="progressStageLabel"></span>
             </div>
-            <div class="w-full bg-surface-base rounded-full h-2 overflow-hidden border border-zinc-800">
-                <div class="bg-zinc-100 h-2 rounded-full transition-all duration-300" :style="'width: ' + progressPercent + '%'"></div>
+            <div class="w-full h-2 rounded-full bg-zinc-950 overflow-hidden border border-zinc-800 p-0.5">
+                <div class="h-full rounded-full bg-gradient-to-r from-brand-600 via-emerald-500 to-teal-400 transition-all duration-300 shadow-sm" :style="'width: ' + progressPercent + '%'"></div>
             </div>
         </div>
     </div>
 
-    <!-- Main Execution Tab Navigation -->
-    <div class="flex space-x-2 border-b border-surface-border pb-1 overflow-x-auto custom-scrollbar text-xs font-medium">
-        <button @click="activeView = 'agents'" class="px-4 py-2 rounded-xl transition shrink-0 flex items-center space-x-2" :class="activeView === 'agents' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">
-            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00-1.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-            <span>8 Agents Matrix & LangGraph</span>
-        </button>
-
-        <button @click="activeView = 'knowledge'" class="px-4 py-2 rounded-xl transition shrink-0 flex items-center space-x-2" :class="activeView === 'knowledge' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">
-            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            <span>Knowledge & Claims (<span x-text="claims.length">0</span>)</span>
-        </button>
-
-        <button @click="activeView = 'writer'" class="px-4 py-2 rounded-xl transition shrink-0 flex items-center space-x-2" :class="activeView === 'writer' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">
-            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            <span>Live Writer & Critic</span>
-        </button>
-
-        <button @click="activeView = 'feed'" class="px-4 py-2 rounded-xl transition shrink-0 flex items-center space-x-2" :class="activeView === 'feed' ? 'bg-zinc-100 text-black font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'">
-            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span>Live Activity Stream (<span x-text="activities.length">0</span>)</span>
-        </button>
+    <!-- Navigation Tabs -->
+    <div class="flex items-center space-x-1 border-b border-surface-border pb-3 text-xs font-medium">
+        <button @click="activeView = 'agents'" :class="activeView === 'agents' ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'" class="px-4 py-2 rounded-xl transition">8 Specialist Agents</button>
+        <button @click="activeView = 'search'" :class="activeView === 'search' ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'" class="px-4 py-2 rounded-xl transition">Live Search & Crawl</button>
+        <button @click="activeView = 'knowledge'" :class="activeView === 'knowledge' ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'" class="px-4 py-2 rounded-xl transition">Knowledge Claims</button>
+        <button @click="activeView = 'writer'" :class="activeView === 'writer' ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'" class="px-4 py-2 rounded-xl transition">Live Writer Output</button>
+        <button @click="activeView = 'feed'" :class="activeView === 'feed' ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'" class="px-4 py-2 rounded-xl transition">Activity Log Stream</button>
     </div>
 
-    <!-- VIEW 1: AGENTS MATRIX & LANGGRAPH VISUALIZER -->
+    <!-- VIEW 1: 8 SPECIALIST AGENT MATRIX GRID -->
     <div x-show="activeView === 'agents'" class="space-y-6">
-        <!-- Interactive LangGraph Node Visualizer -->
-        <div class="bg-zinc-900 rounded-2xl border border-surface-border p-5 space-y-3">
-            <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
-                <span class="text-xs font-bold uppercase tracking-wider text-zinc-300">LangGraph State Machine Execution Graph</span>
-                <span class="text-[10px] font-mono text-brand-400">Thread #{{ run.run_id|slice:":8" }}</span>
-            </div>
-
-            <!-- Graph Nodes Chain -->
-            <div class="flex items-center justify-between overflow-x-auto py-4 px-2 space-x-2 custom-scrollbar text-xs font-mono">
-                <div class="flex flex-col items-center shrink-0">
-                    <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 flex items-center justify-center font-bold text-[10px]">START</div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Init</span>
-                </div>
-                <div class="text-zinc-600 font-bold">&rarr;</div>
-
+        <!-- 8 Specialist Execution Pipeline Visualizer -->
+        <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-4 overflow-x-auto custom-scrollbar">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Sequential Multi-Agent Graph Flow</h3>
+            <div class="flex items-center space-x-2 min-w-[900px] py-2">
                 <!-- 1. Plan -->
                 <div class="flex flex-col items-center shrink-0">
                     <div class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1"
                          :class="isStageCompleted('plan') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'plan' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
-                        <span x-text="isStageCompleted('plan') ? '✓ Plan' : (currentStage === 'plan' ? '⚡ Plan' : 'Plan')"></span>
+                        <span x-text="isStageCompleted('plan') ? '✓ Planner' : (currentStage === 'plan' ? '⚡ Planner' : 'Planner')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Planner Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">OpenRouter</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -162,9 +137,9 @@
                 <div class="flex flex-col items-center shrink-0">
                     <div class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1"
                          :class="isStageCompleted('search') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'search' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
-                        <span x-text="isStageCompleted('search') ? '✓ Search' : (currentStage === 'search' ? '⚡ Search' : 'Search')"></span>
+                        <span x-text="isStageCompleted('search') ? '✓ Searcher' : (currentStage === 'search' ? '⚡ Searcher' : 'Searcher')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Search Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Tavily Search</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -172,9 +147,9 @@
                 <div class="flex flex-col items-center shrink-0">
                     <div class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1"
                          :class="isStageCompleted('extract') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'extract' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
-                        <span x-text="isStageCompleted('extract') ? '✓ Reader' : (currentStage === 'extract' ? '⚡ Reader' : 'Reader')"></span>
+                        <span x-text="isStageCompleted('extract') ? '✓ Extractor' : (currentStage === 'extract' ? '⚡ Extractor' : 'Extractor')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Reader Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">NVIDIA NIM</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -184,7 +159,7 @@
                          :class="isStageCompleted('knowledge') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'knowledge' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
                         <span x-text="isStageCompleted('knowledge') ? '✓ Knowledge' : (currentStage === 'knowledge' ? '⚡ Knowledge' : 'Knowledge')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Knowledge Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Groq LPU</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -194,7 +169,7 @@
                          :class="isStageCompleted('memory') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'memory' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
                         <span x-text="isStageCompleted('memory') ? '✓ Memory' : (currentStage === 'memory' ? '⚡ Memory' : 'Memory')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Memory Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Groq LPU</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -204,7 +179,7 @@
                          :class="isStageCompleted('synthesize') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'synthesize' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
                         <span x-text="isStageCompleted('synthesize') ? '✓ Writer' : (currentStage === 'synthesize' ? '⚡ Writer' : 'Writer')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Writer Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Google Gemini</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -214,7 +189,7 @@
                          :class="isStageCompleted('review') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'review' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
                         <span x-text="isStageCompleted('review') ? '✓ Critic' : (currentStage === 'review' ? '⚡ Critic' : 'Critic')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Critic Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Google Gemini</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -224,7 +199,7 @@
                          :class="isStageCompleted('reflection') ? 'bg-emerald-950/80 border-emerald-700 text-emerald-400' : (currentStage === 'reflection' ? 'bg-brand-950 border-brand-500 text-white animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500')">
                         <span x-text="isStageCompleted('reflection') ? '✓ Reflection' : (currentStage === 'reflection' ? '⚡ Reflection' : 'Reflection')"></span>
                     </div>
-                    <span class="text-[9px] text-zinc-500 mt-1">Reflection Agent</span>
+                    <span class="text-[9px] text-zinc-500 mt-1">Google Gemini</span>
                 </div>
                 <div class="text-zinc-600 font-bold">&rarr;</div>
 
@@ -241,7 +216,6 @@
                 <div class="bg-zinc-900 rounded-2xl border p-5 space-y-3 transition-all duration-200"
                      :class="agent.status === 'running' ? 'border-brand-500 shadow-xl shadow-brand-600/10' : (agent.status === 'completed' ? 'border-emerald-800/80' : 'border-surface-border opacity-75')">
                     
-                    <!-- Header -->
                     <div class="flex justify-between items-start">
                         <div class="space-y-0.5">
                             <span class="text-[10px] font-mono text-zinc-500 uppercase font-bold" x-text="agent.role"></span>
@@ -258,26 +232,16 @@
                         </template>
                     </div>
 
-                    <!-- Current Task Description -->
                     <p class="text-xs text-zinc-400 min-h-[36px] line-clamp-2" x-text="agent.task || 'Awaiting graph step activation...'"></p>
 
-                    <!-- Telemetry Details -->
                     <div class="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 space-y-1 text-[11px] font-mono">
                         <div class="flex justify-between text-zinc-400">
                             <span>Provider:</span>
-                            <strong class="text-zinc-200" x-text="agent.provider || 'Gemini'"></strong>
+                            <strong class="text-zinc-200" x-text="agent.provider"></strong>
                         </div>
                         <div class="flex justify-between text-zinc-400">
                             <span>Model:</span>
-                            <strong class="text-brand-400 truncate max-w-[120px]" x-text="agent.model || 'gemini-2.5'"></strong>
-                        </div>
-                        <div class="flex justify-between text-zinc-400">
-                            <span>Tool Used:</span>
-                            <strong class="text-emerald-400 truncate max-w-[120px]" x-text="agent.tool || 'Native'"></strong>
-                        </div>
-                        <div class="flex justify-between text-zinc-400">
-                            <span>Tokens / Cost:</span>
-                            <strong class="text-zinc-200" x-text="agent.tokens + ' ($' + agent.cost.toFixed(4) + ')'">0 ($0.00)</strong>
+                            <strong class="text-brand-400 truncate max-w-[120px]" x-text="agent.model"></strong>
                         </div>
                     </div>
                 </div>
@@ -285,17 +249,38 @@
         </div>
     </div>
 
+    <!-- VIEW 2: SEARCH & CRAWL -->
+    <div x-show="activeView === 'search'" class="space-y-6" x-cloak>
+        <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Crawled Web & Paper Sources</h3>
+            <div class="space-y-3">
+                <template x-if="sources.length === 0">
+                    <p class="text-xs text-zinc-500 font-mono py-4">Search Agent crawling live web sources...</p>
+                </template>
+                <template x-for="src in sources" :key="src.url">
+                    <div class="p-4 bg-zinc-950 rounded-xl border border-zinc-800 space-y-1">
+                        <div class="font-bold text-xs text-zinc-100" x-text="src.title || 'Crawled Source'"></div>
+                        <div class="text-[11px] font-mono text-brand-400" x-text="src.url"></div>
+                        <p class="text-xs text-zinc-400 mt-2 leading-relaxed" x-text="src.content ? (src.content.slice(0, 250) + '...') : ''"></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
 
     <!-- VIEW 3: KNOWLEDGE & CLAIMS -->
     <div x-show="activeView === 'knowledge'" class="space-y-6" x-cloak>
         <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
-            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Factual Claim Spans & Knowledge Graph</h3>
+            <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Factual Evidence Claims</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-if="claims.length === 0">
+                    <p class="text-xs text-zinc-500 font-mono py-4">Extractor Agent parsing factual evidence claims...</p>
+                </template>
                 <template x-for="(claim, idx) in claims" :key="idx">
                     <div class="p-4 bg-zinc-950 rounded-xl border border-zinc-800 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-mono font-bold text-brand-400" x-text="'[Claim #' + (idx + 1) + ']' "></span>
-                            <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Verified Evidence Span</span>
+                            <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Verified</span>
                         </div>
                         <p class="text-xs text-zinc-200 leading-relaxed" x-text="claim"></p>
                     </div>
@@ -307,36 +292,19 @@
     <!-- VIEW 4: LIVE WRITER & CRITIC -->
     <div x-show="activeView === 'writer'" class="space-y-6" x-cloak>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Outline & Audit -->
             <div class="space-y-6">
-                <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-3">
-                    <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Report Outline</h3>
-                    <ul class="space-y-2 text-xs">
-                        <template x-for="item in outline" :key="item">
-                            <li class="p-2 bg-zinc-950 rounded-lg border border-zinc-800 text-zinc-300 font-semibold" x-text="item"></li>
-                        </template>
-                    </ul>
-                </div>
-
-                <!-- Critic Audit -->
                 <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-3">
                     <div class="flex justify-between items-center">
                         <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Critic Audit Score</h3>
                         <span class="font-mono font-bold text-emerald-400 text-sm" x-text="critiqueScore ? (critiqueScore + ' / 1.0') : 'Auditing...'"></span>
                     </div>
-                    <div class="space-y-1.5 text-xs">
-                        <template x-for="finding in auditFindings" :key="finding">
-                            <div class="p-2 bg-zinc-950 rounded-lg border border-zinc-800 text-emerald-300" x-text="finding"></div>
-                        </template>
-                    </div>
                 </div>
             </div>
 
-            <!-- Live Stream Draft Markdown Report -->
             <div class="lg:col-span-2 bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
                     <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Live Writer Stream Output</h3>
-                    <span class="text-xs font-mono text-brand-400 font-bold">Writer Node Active</span>
+                    <span class="text-xs font-mono text-brand-400 font-bold" x-text="status === 'completed' ? 'Report Draft Complete ✓' : 'Writer Agent Drafting...'"></span>
                 </div>
                 <div class="prose prose-invert max-w-none text-xs text-zinc-200 font-mono bg-zinc-950 p-4 rounded-xl border border-zinc-800 whitespace-pre-wrap leading-relaxed custom-scrollbar h-[420px] overflow-y-auto" x-text="writerStream || 'Writer Agent compiling report draft...'">
                 </div>
@@ -344,7 +312,7 @@
         </div>
     </div>
 
-    <!-- VIEW 5: LIVE ACTIVITY FEED & LOG STREAM -->
+    <!-- VIEW 5: LIVE ACTIVITY FEED -->
     <div x-show="activeView === 'feed'" class="space-y-6" x-cloak>
         <div class="bg-zinc-900 rounded-2xl border border-surface-border p-6 shadow-xl space-y-4">
             <h3 class="text-sm font-bold text-zinc-100 uppercase tracking-wider">Continuous Activity Stream Log</h3>
@@ -356,7 +324,6 @@
                             <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded bg-brand-950 text-brand-400 border border-brand-800 shrink-0" x-text="act.agent"></span>
                             <span class="text-zinc-200" x-text="act.action"></span>
                         </div>
-                        <span class="text-[10px] text-emerald-400 font-bold shrink-0" x-text="act.duration"></span>
                     </div>
                 </template>
             </div>
@@ -365,74 +332,125 @@
 
 </div>
 
-<!-- Alpine.js Real-time Execution Application Script -->
+<!-- Alpine.js Real-time Execution Application Script with Backend Polling -->
 <script>
-function executionApp(runId) {
+function executionApp(runId, initialStatus, initialStage) {
     return {
         runId: runId,
         activeView: 'agents',
-        status: 'running',
-        currentStage: 'plan',
+        status: initialStatus || 'running',
+        currentStage: initialStage || 'plan',
         objective: '',
-        currentProvider: 'Google Gemini',
-        currentModel: 'gemini-2.5-flash',
+        currentProvider: 'OpenRouter',
+        currentModel: 'meta-llama/llama-3.3-70b',
         progressPercent: 15,
         progressStageLabel: 'Planner Agent Initializing',
         tokensUsed: 450,
         estimatedCost: 0.00045,
         elapsedSeconds: 0,
         timerInterval: null,
+        pollingInterval: null,
         eventSource: null,
 
-        // 8 Autonomous Agent States
         agents: [
-            { role: '1. Planner', name: 'Planner Agent', status: 'running', task: 'Decomposing strategy steps...', provider: 'Google Gemini', model: 'gemini-2.5-flash', tool: 'TaskDecomposer', tokens: 450, cost: 0.00045 },
-            { role: '2. Searcher', name: 'Search Agent', status: 'pending', task: 'Awaiting search queries...', provider: 'Groq LPU', model: 'llama-3.3-70b', tool: 'TavilySearch', tokens: 0, cost: 0.00 },
-            { role: '3. Extractor', name: 'Reader Agent', status: 'pending', task: 'Awaiting document text...', provider: 'Google Gemini', model: 'gemini-2.5-flash', tool: 'PDFParser', tokens: 0, cost: 0.00 },
-            { role: '4. Knowledge', name: 'Knowledge Agent', status: 'pending', task: 'Awaiting extracted claims...', provider: 'Google Gemini', model: 'gemini-2.5-flash', tool: 'ClaimDeduplicator', tokens: 0, cost: 0.00 },
-            { role: '5. Memory', name: 'Memory Agent', status: 'pending', task: 'Awaiting context state...', provider: 'Groq LPU', model: 'llama-3.3-70b', tool: 'MemorySaver', tokens: 0, cost: 0.00 },
-            { role: '6. Writer', name: 'Writer Agent', status: 'pending', task: 'Awaiting outline...', provider: 'NVIDIA NIM', model: 'z-ai/glm-5.2', tool: 'ReportSynthesizer', tokens: 0, cost: 0.00 },
-            { role: '7. Critic', name: 'Critic Agent', status: 'pending', task: 'Awaiting draft report...', provider: 'Google Gemini', model: 'gemini-2.5-flash', tool: 'FactualAuditor', tokens: 0, cost: 0.00 },
-            { role: '8. Reflection', name: 'Reflection Agent', status: 'pending', task: 'Awaiting critique score...', provider: 'Groq LPU', model: 'llama-3.3-70b', tool: 'ReflectionEvaluator', tokens: 0, cost: 0.00 },
+            { role: '1. Planner', name: 'Planner Agent', status: 'running', task: 'Decomposing strategy steps...', provider: 'OpenRouter', model: 'meta-llama/llama-3.3-70b' },
+            { role: '2. Searcher', name: 'Search Agent', status: 'pending', task: 'Crawling web sources...', provider: 'Tavily Search', model: 'tavily-api' },
+            { role: '3. Extractor', name: 'Reader Agent', status: 'pending', task: 'Extracting factual claims...', provider: 'NVIDIA NIM', model: 'z-ai/glm-5.2' },
+            { role: '4. Knowledge', name: 'Knowledge Agent', status: 'pending', task: 'Building knowledge graph...', provider: 'Groq LPU', model: 'llama-3.3-70b' },
+            { role: '5. Memory', name: 'Memory Agent', status: 'pending', task: 'Checkpointing memory state...', provider: 'Groq LPU', model: 'llama-3.3-70b' },
+            { role: '6. Writer', name: 'Writer Agent', status: 'pending', task: 'Synthesizing report draft...', provider: 'Google Gemini', model: 'gemini-2.5-flash' },
+            { role: '7. Critic', name: 'Critic Agent', status: 'pending', task: 'Auditing claims & quality...', provider: 'Google Gemini', model: 'gemini-2.5-flash' },
+            { role: '8. Reflection', name: 'Reflection Agent', status: 'pending', task: 'Evaluating reflection loop...', provider: 'Google Gemini', model: 'gemini-2.5-flash' },
         ],
 
-        queries: [
-            "Autonomous multi-agent systems LangGraph state persistence 2026",
-            "RAG dense vector retrieval Qdrant benchmarks architecture"
-        ],
-        sources: [
-            { title: "ArXiv Computer Science Repository", url: "https://arxiv.org/abs/2401.00001" },
-            { title: "LangGraph StateGraph Documentation", url: "https://python.langchain.com/docs/langgraph" },
-            { title: "Qdrant Vector Engine Specs", url: "https://qdrant.tech/documentation" }
-        ],
-        claims: [
-            "Clean Architecture & State Graphs enforce zero dependencies between domain models and API handlers.",
-            "Relational system of record integrated with Qdrant vector projections and Upstash Redis caching.",
-            "PBKDF2-HMAC-SHA256 password hashing with JWT access tokens ensures zero unauthorized access."
-        ],
-        outline: [
-            "1. Executive Summary",
-            "2. Multi-Agent Architecture",
-            "3. Vector Retrieval & Qdrant Benchmarks",
-            "4. Conclusion & Recommendations"
-        ],
-        writerStream: "# Autonomous Multi-Agent Platform Architectural Report\n\n## 1. Executive Summary\nThe platform executes research jobs using clean domain isolation, durable LangGraph state management, and policy-governed sandboxes.",
-        critiqueScore: 0.96,
-        auditFindings: [
-            "✅ All claims backed by verified domain sources",
-            "✅ Citation links valid and formatted",
-            "✅ LaTeX mathematical formulations verified"
-        ],
-        activities: [
-            { timestamp: new Date().toLocaleTimeString(), agent: 'Planner Agent', action: 'Decomposed objective into 4 research strategy steps', duration: '0.8s' },
-            { timestamp: new Date().toLocaleTimeString(), agent: 'Search Agent', action: 'Crawled 3 verified web and paper sources', duration: '1.2s' }
-        ],
+        sources: [],
+        claims: [],
+        writerStream: '',
+        critiqueScore: null,
+        activities: [],
 
-        initSSE() {
+        initApp() {
             this.timerInterval = setInterval(() => {
                 if (this.status === 'running') this.elapsedSeconds++;
             }, 1000);
 
+            // Backend polling loop every 2.5 seconds
+            this.pollBackendStatus();
+            this.pollingInterval = setInterval(() => {
+                if (this.status === 'running') {
+                    this.pollBackendStatus();
+                }
+            }, 2500);
+
+            this.initSSE();
+        },
+
+        async pollBackendStatus() {
+            try {
+                const res = await fetch('/research/status/' + this.runId);
+                if (!res.ok) return;
+                const html = await res.text();
+                
+                // Fetch structured backend data
+                const apiRes = await fetch('/api/v1/research/runs/' + this.runId);
+                if (apiRes.ok) {
+                    const data = await apiRes.json();
+                    if (data.objective) this.objective = data.objective;
+                    if (data.stage) {
+                        this.currentStage = data.stage;
+                        this.updateProgressFromStage(data.stage);
+                    }
+                    if (data.details) {
+                        if (data.details.sources) this.sources = data.details.sources;
+                        if (data.details.claims) this.claims = data.details.claims;
+                        if (data.details.draft_report) this.writerStream = data.details.draft_report;
+                        if (data.details.critique_score) this.critiqueScore = data.details.critique_score;
+                    }
+                    if (data.result_summary && !this.writerStream) {
+                        this.writerStream = data.result_summary;
+                    }
+                    
+                    // Only mark as completed when backend explicitly confirms completed status AND report is present
+                    if (data.status === 'completed' && (this.writerStream || data.stage === 'finalize')) {
+                        this.status = 'completed';
+                        this.progressPercent = 100;
+                        this.progressStageLabel = 'Execution Completed';
+                        this.agents.forEach(a => a.status = 'completed');
+                        if (this.pollingInterval) clearInterval(this.pollingInterval);
+                    }
+                }
+            } catch (err) {
+                console.log('Status polling error:', err);
+            }
+        },
+
+        updateProgressFromStage(stage) {
+            const stageProgressMap = {
+                'intake': { pct: 10, label: 'Intake Node Active', agIdx: 0 },
+                'plan': { pct: 20, label: 'Planner Agent (OpenRouter)', agIdx: 0 },
+                'search': { pct: 35, label: 'Search Agent (Tavily)', agIdx: 1 },
+                'extract': { pct: 50, label: 'Extractor Agent (NVIDIA NIM)', agIdx: 2 },
+                'knowledge': { pct: 65, label: 'Knowledge Agent (Groq LPU)', agIdx: 3 },
+                'memory': { pct: 75, label: 'Memory Agent (Groq LPU)', agIdx: 4 },
+                'synthesize': { pct: 85, label: 'Writer Agent (Google Gemini)', agIdx: 5 },
+                'review': { pct: 92, label: 'Critic Agent (Google Gemini)', agIdx: 6 },
+                'reflection': { pct: 97, label: 'Reflection Agent (Google Gemini)', agIdx: 7 },
+                'finalize': { pct: 100, label: 'Finalizing Output', agIdx: 7 }
+            };
+
+            const info = stageProgressMap[stage];
+            if (info) {
+                this.progressPercent = info.pct;
+                this.progressStageLabel = info.label;
+                for (let i = 0; i < this.agents.length; i++) {
+                    if (i < info.agIdx) this.agents[i].status = 'completed';
+                    else if (i === info.agIdx) this.agents[i].status = 'running';
+                    else this.agents[i].status = 'pending';
+                }
+            }
+        },
+
+        initSSE() {
             try {
                 this.eventSource = new EventSource('/api/v1/events/stream/' + this.runId);
                 this.eventSource.onmessage = (event) => {
@@ -440,57 +458,29 @@ function executionApp(runId) {
                     this.handleSSEEvent(data);
                 };
                 this.eventSource.onerror = () => {
-                    // Fallback polling loop if SSE completes or closes
                     this.eventSource.close();
                 };
             } catch (err) {
-                console.log('SSE Fallback Mode:', err);
+                console.log('SSE Mode Notice:', err);
             }
         },
 
         handleSSEEvent(data) {
-            if (data.stage) this.currentStage = data.stage;
-            if (data.agent) {
-                const ag = this.agents.find(a => a.name === data.agent || a.role.toLowerCase().includes(data.stage));
-                if (ag) {
-                    ag.status = 'running';
-                    if (data.payload) {
-                        if (data.payload.task) ag.task = data.payload.task;
-                        if (data.payload.model) ag.model = data.payload.model;
-                        if (data.payload.provider) ag.provider = data.payload.provider;
-                        if (data.payload.tool) ag.tool = data.payload.tool;
-                        if (data.payload.tokens) ag.tokens += data.payload.tokens;
-                        if (data.payload.cost) ag.cost += data.payload.cost;
-                    }
-                }
+            if (data.stage) {
+                this.currentStage = data.stage;
+                this.updateProgressFromStage(data.stage);
             }
-
             if (data.payload) {
-                if (data.payload.progress) this.progressPercent = data.payload.progress;
-                if (data.payload.provider) this.currentProvider = data.payload.provider;
-                if (data.payload.model) this.currentModel = data.payload.model;
-                if (data.payload.tokens) this.tokensUsed += data.payload.tokens;
-                if (data.payload.cost) this.estimatedCost += data.payload.cost;
-                if (data.payload.queries) this.queries = data.payload.queries;
                 if (data.payload.sources) this.sources = data.payload.sources;
                 if (data.payload.claims) this.claims = data.payload.claims;
                 if (data.payload.writer_stream) this.writerStream = data.payload.writer_stream;
                 if (data.payload.critique_score) this.critiqueScore = data.payload.critique_score;
-                if (data.payload.audit_findings) this.auditFindings = data.payload.audit_findings;
             }
-
             if (data.event === 'completed') {
                 this.status = 'completed';
                 this.progressPercent = 100;
                 this.agents.forEach(a => a.status = 'completed');
             }
-
-            this.activities.unshift({
-                timestamp: new Date().toLocaleTimeString(),
-                agent: data.agent || 'Engine Node',
-                action: data.payload && data.payload.task ? data.payload.task : ('Activated node ' + data.stage),
-                duration: '0.4s'
-            });
         },
 
         isStageCompleted(stageName) {
