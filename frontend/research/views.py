@@ -404,11 +404,35 @@ def research_wizard_view(request: HttpRequest) -> HttpResponse:
 
 @require_auth
 def knowledge_view(request: HttpRequest) -> HttpResponse:
-    """Render Knowledge & RAG Index Explorer."""
+    """Render Knowledge & RAG Index Explorer with dynamic user research artifacts."""
+    runs = []
+    sources = []
+    claims = []
+    try:
+        res = requests.get(f"{BACKEND_API_URL}/research/runs", timeout=5.0)
+        if res.status_code == 200:
+            runs = res.json()
+            for r in runs:
+                details = r.get("details") or {}
+                if isinstance(details, dict):
+                    for src in details.get("sources", []):
+                        if src and src not in sources:
+                            sources.append(src)
+                    for claim in details.get("claims", []):
+                        if claim and claim not in claims:
+                            claims.append(claim)
+    except Exception:
+        pass
+
     return render(
         request,
         "research/knowledge.html",
-        {"user_email": request.COOKIES.get("user_email", "Researcher")},
+        {
+            "runs": runs,
+            "sources": sources,
+            "claims": claims,
+            "user_email": request.COOKIES.get("user_email", "Researcher"),
+        },
     )
 
 

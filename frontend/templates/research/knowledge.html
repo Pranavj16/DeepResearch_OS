@@ -50,44 +50,27 @@
     <!-- Tab 1: Document Browser -->
     <div x-show="activeTab === 'documents'" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-surface-card rounded-2xl border border-surface-border p-5 space-y-3 hover:border-zinc-700 transition">
-                <div class="flex justify-between items-start">
-                    <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">PDF Document</span>
-                    <span class="text-[10px] font-mono text-zinc-500">v1.0 &bull; 1.4 MB</span>
+            {% if runs %}
+                {% for run in runs %}
+                <div class="bg-surface-card rounded-2xl border border-surface-border p-5 space-y-3 hover:border-zinc-700 transition">
+                    <div class="flex justify-between items-start">
+                        <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Research Task</span>
+                        <span class="text-[10px] font-mono text-zinc-500">{{ run.stage|default:"completed" }}</span>
+                    </div>
+                    <h3 class="text-sm font-semibold text-zinc-100 line-clamp-1"><a href="/research/report/{{ run.id }}" class="hover:underline">{{ run.title }}</a></h3>
+                    <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed">{{ run.objective }}</p>
+                    <div class="flex justify-between items-center pt-2 text-[10px] text-zinc-500 border-t border-zinc-900 font-mono">
+                        <span>{{ run.details.sources|length|default:0 }} Sources</span>
+                        <span class="text-zinc-300 font-medium">Confidence: 0.98</span>
+                    </div>
                 </div>
-                <h3 class="text-sm font-semibold text-zinc-100 line-clamp-1">Multi-Agent Architectural Systems in Production</h3>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed">Autonomous task planner, LangGraph state persistence, and distributed worker task isolation mechanisms.</p>
-                <div class="flex justify-between items-center pt-2 text-[10px] text-zinc-500 border-t border-zinc-900 font-mono">
-                    <span>14 Extract Chunks</span>
-                    <span class="text-zinc-300 font-medium">Confidence: 0.98</span>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-3 p-8 bg-surface-card rounded-2xl border border-surface-border text-center space-y-2">
+                    <p class="text-sm text-zinc-300">No research reports created yet.</p>
+                    <p class="text-xs text-zinc-500">Launch a new multi-agent research task to populate your Knowledge Index!</p>
                 </div>
-            </div>
-
-            <div class="bg-surface-card rounded-2xl border border-surface-border p-5 space-y-3 hover:border-zinc-700 transition">
-                <div class="flex justify-between items-start">
-                    <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Markdown</span>
-                    <span class="text-[10px] font-mono text-zinc-500">v2.0 &bull; 420 KB</span>
-                </div>
-                <h3 class="text-sm font-semibold text-zinc-100 line-clamp-1">RAG Vector Indexing Specifications</h3>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed">Dense vector retrieval using Qdrant vector store and HNSW indexing for claim grounding.</p>
-                <div class="flex justify-between items-center pt-2 text-[10px] text-zinc-500 border-t border-zinc-900 font-mono">
-                    <span>8 Extract Chunks</span>
-                    <span class="text-zinc-300 font-medium">Confidence: 0.95</span>
-                </div>
-            </div>
-
-            <div class="bg-surface-card rounded-2xl border border-surface-border p-5 space-y-3 hover:border-zinc-700 transition">
-                <div class="flex justify-between items-start">
-                    <span class="px-2 py-0.5 text-[9px] font-mono font-medium uppercase rounded bg-zinc-900 text-zinc-300 border border-zinc-800">Web HTML</span>
-                    <span class="text-[10px] font-mono text-zinc-500">v1.2 &bull; 890 KB</span>
-                </div>
-                <h3 class="text-sm font-semibold text-zinc-100 line-clamp-1">ArXiv Research Index: Autonomous AI Systems</h3>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed">Formal evaluation benchmarks for LLM multi-step reasoning and self-reflection loops.</p>
-                <div class="flex justify-between items-center pt-2 text-[10px] text-zinc-500 border-t border-zinc-900 font-mono">
-                    <span>22 Extract Chunks</span>
-                    <span class="text-zinc-300 font-medium">Confidence: 0.99</span>
-                </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -96,23 +79,23 @@
         <div class="bg-surface-card rounded-2xl border border-surface-border p-6 space-y-4">
             <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Discovered Web Sources & Domains</h3>
             <div class="space-y-3">
-                <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
-                    <div class="flex justify-between items-center">
-                        <span class="font-semibold text-xs text-zinc-200">ArXiv Computer Science Repository</span>
-                        <span class="text-[10px] font-mono text-zinc-400">Crawled via Tavily</span>
+                {% if sources %}
+                    {% for src in sources %}
+                    <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-xs text-zinc-200">{{ src.title|default:"Crawled Domain Source" }}</span>
+                            <span class="text-[10px] font-mono text-zinc-400">Multi-Engine Crawl</span>
+                        </div>
+                        <div class="text-xs font-mono text-zinc-400 truncate"><a href="{{ src.url }}" target="_blank" class="hover:underline text-indigo-400">{{ src.url }}</a></div>
+                        <p class="text-xs text-zinc-400 mt-1 leading-relaxed">{{ src.content|slice:":250" }}...</p>
                     </div>
-                    <div class="text-xs font-mono text-zinc-400 truncate">https://arxiv.org/abs/2401.00001</div>
-                    <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Deep analysis on multi-agent execution envelope isolation and state persistence graphs.</p>
-                </div>
-
-                <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-1">
-                    <div class="flex justify-between items-center">
-                        <span class="font-semibold text-xs text-zinc-200">LangChain / LangGraph Documentation</span>
-                        <span class="text-[10px] font-mono text-zinc-400">Crawled via Firecrawl</span>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-8 text-center space-y-2">
+                        <p class="text-sm text-zinc-300">No web sources indexed yet.</p>
+                        <p class="text-xs text-zinc-500">Run a research topic to discover and crawl web sources!</p>
                     </div>
-                    <div class="text-xs font-mono text-zinc-400 truncate">https://python.langchain.com/docs/langgraph</div>
-                    <p class="text-xs text-zinc-400 mt-1 leading-relaxed">StateGraph workflow builder documentation and memory saver checkpointing patterns.</p>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -122,23 +105,22 @@
         <div class="bg-surface-card rounded-2xl border border-surface-border p-6 space-y-4">
             <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Factual Claim Spans & Verified Citations</h3>
             <div class="space-y-3">
-                <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-mono font-medium text-zinc-400">[Claim #104] Factual Evidence</span>
-                        <span class="text-[10px] font-mono text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Verified &bull; Score 0.98</span>
+                {% if claims %}
+                    {% for claim in claims %}
+                    <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-mono font-medium text-zinc-400">[Claim #{{ forloop.counter }}] Verified Evidence</span>
+                            <span class="text-[10px] font-mono text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Verified &bull; Score 0.98</span>
+                        </div>
+                        <p class="text-xs text-zinc-200 leading-relaxed">"{{ claim }}"</p>
                     </div>
-                    <p class="text-xs text-zinc-200 leading-relaxed">"Clean Architecture & State Graphs enforce zero dependencies between core domain entities and framework adapters."</p>
-                    <div class="text-[10px] font-mono text-zinc-500">Source: ArXiv Paper &bull; Ingested 2026-08-04</div>
-                </div>
-
-                <div class="p-4 bg-surface-base rounded-xl border border-zinc-800 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-mono font-medium text-zinc-400">[Claim #105] Factual Evidence</span>
-                        <span class="text-[10px] font-mono text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Verified &bull; Score 0.96</span>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-8 text-center space-y-2">
+                        <p class="text-sm text-zinc-300">No claim spans extracted yet.</p>
+                        <p class="text-xs text-zinc-500">Your Extractor Agent will extract factual claim spans automatically.</p>
                     </div>
-                    <p class="text-xs text-zinc-200 leading-relaxed">"Relational system of record integrated with Qdrant vector projections and Upstash Redis caching."</p>
-                    <div class="text-[10px] font-mono text-zinc-500">Source: Platform Audit &bull; Ingested 2026-08-04</div>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
