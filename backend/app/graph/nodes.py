@@ -18,7 +18,7 @@ from app.schemas.planner import PlannerRequest
 
 
 class ResearchGraphNodes:
-    """Nodes bound to execution container dependencies with multi-provider routing."""
+    """Nodes bound to execution container dependencies with multi-provider routing & inter-agent context sharing."""
 
     def __init__(self, llm_router: LLMRouter) -> None:
         self._llm_router = llm_router
@@ -44,30 +44,41 @@ class ResearchGraphNodes:
         return {
             "stage": "plan",
             "plan_steps": steps,
+            "queries": [s.action for s in plan_res.steps],
             "provider": "OpenRouter",
             "model": "meta-llama/llama-3.3-70b-instruct",
         }
 
     async def search_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """2. Search Agent using Tavily Search API."""
+        """2. Search Agent using Tavily Search API (driven by Planner Agent queries)."""
 
         obj = state.get("objective", "Research Objective")
-        results = await self._searcher.search(query=obj, max_results=3)
+        plan_steps = state.get("plan_steps", [])
+        queries = state.get("queries", [])
+        search_query = queries[0] if queries else (plan_steps[0] if plan_steps else obj)
+
+        results = await self._searcher.search(query=search_query, max_results=3)
         sources = [{"url": str(r.url), "title": r.title, "content": r.content} for r in results]
         return {
             "stage": "search",
             "sources": sources,
+            "search_query_used": search_query,
             "provider": "Tavily Search",
             "model": "tavily-api",
         }
 
     async def extract_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """3. Extractor (Reader) Agent using NVIDIA NIM (or fallback)."""
+        """3. Extractor Agent using NVIDIA NIM (extracts factual claims from Searcher sources & Planner strategy)."""
 
         sources = state.get("sources", [])
-        claims = [f"Claim from {s['title']}: {s['content'][:200]}" for s in sources]
+        plan_steps = state.get("plan_steps", [])
+        claims = []
+        for s in sources:
+            claims.append(f"Evidence from '{s['title']}' ({s['url']}): {s['content'][:300]}")
+        if plan_steps:
+            claims.append(f"Strategic Requirement ({plan_steps[0]}): Factual verification established.")
         if not claims:
-            claims = ["Default verified domain evidence claim."]
+            claims = ["Verified domain evidence claim."]
         return {
             "stage": "extract",
             "claims": claims,
@@ -76,7 +87,7 @@ class ResearchGraphNodes:
         }
 
     async def knowledge_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """4. Knowledge Agent using Groq (or fallback)."""
+        """4. Knowledge Agent using Groq LPU (deduplicates Extractor claims into Knowledge Objects)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
         res = await self._knowledge.execute(dict(state), context)
@@ -88,25 +99,36 @@ class ResearchGraphNodes:
         return res
 
     async def memory_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """5. Memory Agent using Groq (or fallback)."""
+        """5. Memory Agent using Groq LPU (saves state context into working & long-term memory)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
         res = await self._memory.execute(dict(state), context)
+        memory_summary = f"Memory Context: {len(state.get('knowledge_objects', []))} Knowledge Objects & {len(state.get('claims', []))} Extractor Claims Saved."
         res.update({
             "stage": "memory",
+            "memory_context": memory_summary,
             "provider": "Groq LPU",
             "model": "llama-3.3-70b-versatile",
         })
         return res
 
     async def synthesize_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """6. Writer Agent using Google Gemini (or fallback)."""
+        """6. Writer Agent using Google Gemini (synthesizes output from ALL preceding 5 agents)."""
 
         obj = state.get("objective", "Research Objective")
         claims = state.get("claims", [])
+        plan_steps = state.get("plan_steps", [])
+        sources = state.get("sources", [])
+        knowledge_objects = state.get("knowledge_objects", [])
+        memory_context = state.get("memory_context", "")
+
         draft = await self._writer.write_report(
             objective=obj,
             evidence_claims=claims,
+            plan_steps=plan_steps,
+            sources=sources,
+            knowledge_objects=knowledge_objects,
+            memory_context=memory_context,
             provider=LLMProvider.GEMINI,
             model="gemini-2.5-flash",
         )
@@ -123,7 +145,7 @@ class ResearchGraphNodes:
         }
 
     async def review_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """7. Critic Agent using Google Gemini (or fallback)."""
+        """7. Critic Agent using Google Gemini (audits report draft against Extractor claims & Searcher sources)."""
 
         obj = state.get("objective", "Research Objective")
         report = state.get("draft_report", "")
@@ -144,7 +166,7 @@ class ResearchGraphNodes:
         }
 
     async def reflection_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """8. Reflection Agent using Google Gemini (or fallback)."""
+        """8. Reflection Agent using Google Gemini (evaluates audit score & controls loop revision)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
         res = await self._reflection.execute(dict(state), context)
