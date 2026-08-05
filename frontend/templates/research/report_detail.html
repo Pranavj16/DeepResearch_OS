@@ -114,7 +114,7 @@
         return '<p class="text-zinc-200 text-sm leading-relaxed my-3">' + html + '</p>';
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
+    function initMarkdownRender() {
         const rawElem = document.getElementById("markdown-raw");
         const targetElem = document.getElementById("markdown-target");
         
@@ -132,6 +132,13 @@
                 }
             }
         }
-    });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initMarkdownRender);
+    } else {
+        initMarkdownRender();
+    }
+    document.addEventListener("htmx:afterSettle", initMarkdownRender);
 </script>
 {% endblock %}
