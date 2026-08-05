@@ -27,13 +27,64 @@ async def get_session() -> AsyncSession:
         yield session
 
 
+import asyncio
+
+async def _execute_graph_in_background(
+    run_id: UUID,
+    execution_id: UUID,
+    workspace_id: UUID,
+    objective: str,
+    llm_router: LLMRouter,
+):
+    """Execute LangGraph multi-agent research graph asynchronously in background task."""
+    engine = create_engine_from_url()
+    session_factory = create_session_factory(engine)
+    async with session_factory() as session:
+        stmt = select(ResearchRunModel).where(ResearchRunModel.id == run_id)
+        res = await session.execute(stmt)
+        run = res.scalar_one_or_none()
+        if not run:
+            return
+
+        try:
+            graph = build_research_graph(llm_router)
+            initial_state = {
+                "research_run_id": run.id,
+                "execution_envelope_id": execution_id,
+                "workspace_id": workspace_id,
+                "objective": objective,
+                "stage": "intake",
+            }
+            res_state = await graph.ainvoke(
+                initial_state,
+                config={"configurable": {"thread_id": str(run.id)}},
+            )
+            run.status = "completed"
+            run.stage = res_state.get("stage", "finalize")
+            run.result_summary = res_state.get("draft_report", "Research finished.")
+            run.details = {
+                "plan_steps": res_state.get("plan_steps", []),
+                "sources": res_state.get("sources", []),
+                "claims": res_state.get("claims", []),
+                "critique_score": res_state.get("critique_score", 0.95),
+                "critique_passed": res_state.get("critique_passed", True),
+                "draft_report": res_state.get("draft_report", ""),
+            }
+            await session.commit()
+        except Exception as err:
+            run.status = "failed"
+            run.result_summary = str(err)
+            run.details = {"error": str(err)}
+            await session.commit()
+
+
 @router.post("/runs", response_model=ResearchRunResponse, status_code=status.HTTP_201_CREATED)
 async def create_research_run(
     payload: CreateResearchRunRequest,
     session: AsyncSession = Depends(get_session),
     llm_router: LLMRouter = Depends(get_llm_router),
 ) -> ResearchRunResponse:
-    """Create and trigger a durable autonomous research run."""
+    """Create and trigger a durable autonomous research run asynchronously."""
 
     ws_service = WorkspaceService(session)
     org, proj, ws, env, user = await ws_service.get_or_create_default_tenancy(payload.user_email)
@@ -68,37 +119,12 @@ async def create_research_run(
     session.add(run)
     await session.commit()
 
-    # Execute graph synchronously for API response demonstration
-    try:
-        graph = build_research_graph(llm_router)
-        initial_state = {
-            "research_run_id": run.id,
-            "execution_envelope_id": envelope.id,
-            "workspace_id": ws.id,
-            "objective": payload.objective,
-            "stage": "intake",
-        }
-        res_state = await graph.ainvoke(
-            initial_state,
-            config={"configurable": {"thread_id": str(run.id)}},
+    # Trigger background execution task immediately without blocking HTTP response
+    asyncio.create_task(
+        _execute_graph_in_background(
+            run.id, envelope.id, ws.id, payload.objective, llm_router
         )
-        run.status = "completed"
-        run.stage = res_state.get("stage", "finalize")
-        run.result_summary = res_state.get("draft_report", "Research finished.")
-        run.details = {
-            "plan_steps": res_state.get("plan_steps", []),
-            "sources": res_state.get("sources", []),
-            "claims": res_state.get("claims", []),
-            "critique_score": res_state.get("critique_score", 0.95),
-            "critique_passed": res_state.get("critique_passed", True),
-            "draft_report": res_state.get("draft_report", ""),
-        }
-        await session.commit()
-    except Exception as err:
-        run.status = "failed"
-        run.result_summary = str(err)
-        run.details = {"error": str(err)}
-        await session.commit()
+    )
 
     return ResearchRunResponse(
         id=run.id,
