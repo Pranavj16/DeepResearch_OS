@@ -23,15 +23,15 @@ class PlannerAgent:
 
         available = self._llm_router.available_providers()
         if not provider or provider not in available:
-            if LLMProvider.GEMINI in available:
+            if LLMProvider.OPENROUTER in available:
+                provider = LLMProvider.OPENROUTER
+                model = "meta-llama/llama-3.3-70b-instruct"
+            elif LLMProvider.GEMINI in available:
                 provider = LLMProvider.GEMINI
                 model = "gemini-2.5-flash"
             elif LLMProvider.GROQ in available:
                 provider = LLMProvider.GROQ
                 model = "llama-3.3-70b-versatile"
-            elif LLMProvider.OPENROUTER in available:
-                provider = LLMProvider.OPENROUTER
-                model = "meta-llama/llama-3.3-70b-instruct"
             elif LLMProvider.NVIDIA in available:
                 provider = LLMProvider.NVIDIA
                 model = "z-ai/glm-5.2"

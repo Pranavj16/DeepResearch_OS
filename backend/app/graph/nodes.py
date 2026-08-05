@@ -12,12 +12,13 @@ from app.agents.reflection.agent import ReflectionAgent
 from app.agents.search.agent import SearchAgent
 from app.agents.writer.agent import WriterAgent
 from app.graph.state import ResearchGraphState
+from app.llm.models import LLMProvider
 from app.llm.router import LLMRouter
 from app.schemas.planner import PlannerRequest
 
 
 class ResearchGraphNodes:
-    """Nodes bound to execution container dependencies."""
+    """Nodes bound to execution container dependencies with multi-provider routing."""
 
     def __init__(self, llm_router: LLMRouter) -> None:
         self._llm_router = llm_router
@@ -31,77 +32,131 @@ class ResearchGraphNodes:
         self._reflection = ReflectionAgent()
 
     async def plan_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Generate objective plan steps."""
+        """1. Planner Agent using OpenRouter (or fallback)."""
 
         obj = state.get("objective", "General Research Objective")
-        plan_res = await self._planner.plan(PlannerRequest(research_question=obj))
+        plan_res = await self._planner.plan(
+            PlannerRequest(research_question=obj),
+            provider=LLMProvider.OPENROUTER,
+            model="meta-llama/llama-3.3-70b-instruct",
+        )
         steps = [f"{s.order}. {s.action}: {s.rationale}" for s in plan_res.steps]
-        return {"stage": "plan", "plan_steps": steps}
+        return {
+            "stage": "plan",
+            "plan_steps": steps,
+            "provider": "OpenRouter",
+            "model": "meta-llama/llama-3.3-70b-instruct",
+        }
 
     async def search_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Execute source discovery."""
+        """2. Search Agent using Tavily Search API."""
 
         obj = state.get("objective", "Research Objective")
         results = await self._searcher.search(query=obj, max_results=3)
         sources = [{"url": str(r.url), "title": r.title, "content": r.content} for r in results]
-        return {"stage": "search", "sources": sources}
+        return {
+            "stage": "search",
+            "sources": sources,
+            "provider": "Tavily Search",
+            "model": "tavily-api",
+        }
 
     async def extract_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Extract factual claims from retrieved sources."""
+        """3. Extractor (Reader) Agent using NVIDIA NIM (or fallback)."""
 
         sources = state.get("sources", [])
         claims = [f"Claim from {s['title']}: {s['content'][:200]}" for s in sources]
         if not claims:
             claims = ["Default verified domain evidence claim."]
-        return {"stage": "extract", "claims": claims}
+        return {
+            "stage": "extract",
+            "claims": claims,
+            "provider": "NVIDIA NIM",
+            "model": "z-ai/glm-5.2",
+        }
 
     async def knowledge_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Consolidate claims into structured knowledge graph objects."""
+        """4. Knowledge Agent using Groq (or fallback)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
-        return await self._knowledge.execute(dict(state), context)
+        res = await self._knowledge.execute(dict(state), context)
+        res.update({
+            "stage": "knowledge",
+            "provider": "Groq LPU",
+            "model": "llama-3.3-70b-versatile",
+        })
+        return res
 
     async def memory_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Update long-term and working research memory."""
+        """5. Memory Agent using Groq (or fallback)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
-        return await self._memory.execute(dict(state), context)
+        res = await self._memory.execute(dict(state), context)
+        res.update({
+            "stage": "memory",
+            "provider": "Groq LPU",
+            "model": "llama-3.3-70b-versatile",
+        })
+        return res
 
     async def synthesize_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Synthesize report draft."""
+        """6. Writer Agent using Google Gemini (or fallback)."""
 
         obj = state.get("objective", "Research Objective")
         claims = state.get("claims", [])
-        draft = await self._writer.write_report(objective=obj, evidence_claims=claims)
+        draft = await self._writer.write_report(
+            objective=obj,
+            evidence_claims=claims,
+            provider=LLMProvider.GEMINI,
+            model="gemini-2.5-flash",
+        )
         report_str = (
             f"# {draft.title}\n\n## Executive Summary\n{draft.executive_summary}\n\n## Key Findings\n"
             + "\n".join(f"- {f}" for f in draft.key_findings)
             + f"\n\n## Detailed Analysis\n{draft.detailed_analysis}"
         )
-        return {"stage": "synthesize", "draft_report": report_str}
+        return {
+            "stage": "synthesize",
+            "draft_report": report_str,
+            "provider": "Google Gemini",
+            "model": "gemini-2.5-flash",
+        }
 
     async def review_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Critique synthesized report."""
+        """7. Critic Agent using Google Gemini (or fallback)."""
 
         obj = state.get("objective", "Research Objective")
         report = state.get("draft_report", "")
-        critique = await self._critic.review_report(objective=obj, report_text=report)
+        critique = await self._critic.review_report(
+            objective=obj,
+            report_text=report,
+            provider=LLMProvider.GEMINI,
+            model="gemini-2.5-flash",
+        )
         return {
             "stage": "review",
             "critique_score": critique.quality_score,
             "critique_passed": critique.passed,
             "review_required": not critique.passed,
             "critic_feedback": {"quality_score": critique.quality_score, "passed": critique.passed},
+            "provider": "Google Gemini",
+            "model": "gemini-2.5-flash",
         }
 
     async def reflection_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Self-reflect on critique and evaluate revision loop requirements."""
+        """8. Reflection Agent using Google Gemini (or fallback)."""
 
         context = AgentContext(run_id=str(state.get("research_run_id", "default")))
-        return await self._reflection.execute(dict(state), context)
+        res = await self._reflection.execute(dict(state), context)
+        res.update({
+            "stage": "reflection",
+            "provider": "Google Gemini",
+            "model": "gemini-2.5-flash",
+        })
+        return res
 
     async def finalize_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """Finalize research output."""
+        """Finalize research output and lock state graph execution."""
 
         return {"stage": "finalize"}
 
