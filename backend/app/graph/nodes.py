@@ -17,13 +17,17 @@ from app.llm.router import LLMRouter
 from app.schemas.planner import PlannerRequest
 
 
+from app.core.settings import Settings
+from app.tools.tavily import TavilySearchClient
+
+
 class ResearchGraphNodes:
     """Nodes bound to execution container dependencies with multi-provider routing & inter-agent context sharing."""
 
     def __init__(self, llm_router: LLMRouter) -> None:
         self._llm_router = llm_router
         self._planner = PlannerAgent(llm_router)
-        self._searcher = SearchAgent()
+        self._searcher = SearchAgent(TavilySearchClient.from_settings(Settings()))
         self._reader = ReaderAgent()
         self._knowledge = KnowledgeAgent()
         self._memory = MemoryAgent()
@@ -55,14 +59,25 @@ class ResearchGraphNodes:
         obj = state.get("objective", "Research Objective")
         plan_steps = state.get("plan_steps", [])
         queries = state.get("queries", [])
-        search_query = queries[0] if queries else (plan_steps[0] if plan_steps else obj)
+        
+        search_queries = queries if queries else ([s.split(":")[0] for s in plan_steps] if plan_steps else [obj])
+        all_results = []
+        for q in search_queries[:2]:
+            try:
+                res = await self._searcher.search(query=q, max_results=2)
+                all_results.extend(res)
+            except Exception:
+                continue
 
-        results = await self._searcher.search(query=search_query, max_results=3)
-        sources = [{"url": str(r.url), "title": r.title, "content": r.content} for r in results]
+        if not all_results:
+            all_results = await self._searcher.search(query=obj, max_results=3)
+
+        sources = [{"url": str(r.url), "title": r.title, "content": r.content} for r in all_results]
+        search_query_display = ", ".join(search_queries[:2])
         return {
             "stage": "search",
             "sources": sources,
-            "search_query_used": search_query,
+            "search_query_used": search_query_display,
             "provider": "Tavily Search",
             "model": "tavily-api",
         }

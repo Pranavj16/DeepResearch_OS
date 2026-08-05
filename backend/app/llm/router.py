@@ -37,6 +37,10 @@ class LLMRouter:
         """Route the request to the configured provider or execute fallback chain."""
 
         provider = self._providers.get(request.provider)
+        if provider is None and self._providers:
+            alt_name, provider = next(iter(self._providers.items()))
+            request = request.model_copy(update={"provider": alt_name})
+
         if provider is not None:
             try:
                 return await provider.generate(request)
