@@ -18,6 +18,9 @@ from app.schemas.planner import PlannerRequest
 
 
 from app.core.settings import Settings
+from app.tools.arxiv import ArxivSearchClient
+from app.tools.duckduckgo import DuckDuckGoSearchClient
+from app.tools.serper import SerperSearchClient
 from app.tools.tavily import TavilySearchClient
 
 
@@ -25,9 +28,15 @@ class ResearchGraphNodes:
     """Nodes bound to execution container dependencies with multi-provider routing & inter-agent context sharing."""
 
     def __init__(self, llm_router: LLMRouter) -> None:
+        settings = Settings()
         self._llm_router = llm_router
         self._planner = PlannerAgent(llm_router)
-        self._searcher = SearchAgent(TavilySearchClient.from_settings(Settings()))
+        self._searcher = SearchAgent(
+            tavily_port=TavilySearchClient.from_settings(settings),
+            serper_client=SerperSearchClient.from_settings(settings),
+            arxiv_client=ArxivSearchClient(),
+            ddg_client=DuckDuckGoSearchClient(),
+        )
         self._reader = ReaderAgent()
         self._knowledge = KnowledgeAgent()
         self._memory = MemoryAgent()
