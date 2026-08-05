@@ -61,23 +61,32 @@ class ResearchGraphNodes:
         }
 
     async def search_node(self, state: ResearchGraphState) -> dict[str, Any]:
-        """2. Search Agent using Tavily Search API (driven by Planner Agent queries)."""
+        """2. Search Agent using Tavily / Google Serper / DuckDuckGo driven by Planner Agent queries and user objective."""
 
         obj = state.get("objective", "Research Objective")
         plan_steps = state.get("plan_steps", [])
         queries = state.get("queries", [])
         
-        search_queries = queries if queries else ([s.split(":")[0] for s in plan_steps] if plan_steps else [obj])
+        search_queries = []
+        if obj:
+            search_queries.append(obj)
+        for q in queries:
+            if q and q not in search_queries and "Initial Discovery" not in q and "Deep Ingestion" not in q:
+                search_queries.append(f"{obj} {q}")
+
+        if not search_queries:
+            search_queries = [obj]
+
         all_results = []
-        for q in search_queries[:2]:
+        for q in search_queries[:3]:
             try:
-                res = await self._searcher.search(query=q, max_results=2)
+                res = await self._searcher.search(query=q, max_results=3)
                 all_results.extend(res)
             except Exception:
                 continue
 
         if not all_results:
-            all_results = await self._searcher.search(query=obj, max_results=3)
+            all_results = await self._searcher.search(query=obj, max_results=4)
 
         sources = [{"url": str(r.url), "title": r.title, "content": r.content} for r in all_results]
         search_query_display = ", ".join(search_queries[:2])
@@ -85,8 +94,8 @@ class ResearchGraphNodes:
             "stage": "search",
             "sources": sources,
             "search_query_used": search_query_display,
-            "provider": "Tavily Search",
-            "model": "tavily-api",
+            "provider": "Tavily / Google Serper",
+            "model": "search-api",
         }
 
     async def extract_node(self, state: ResearchGraphState) -> dict[str, Any]:

@@ -105,16 +105,29 @@ class LLMRouter:
             if name == "PlannerResponse":
                 from app.schemas.planner import PlanStep
 
+                req_topic = "Autonomous Multi-Agent Systems"
+                if "Research Question:" in user_prompt:
+                    req_topic = user_prompt.split("Research Question:")[1].split("\n")[0].strip()
+                elif "Objective:" in user_prompt:
+                    req_topic = user_prompt.split("Objective:")[1].split("\n")[0].strip()
+
                 return response_schema(
-                    objective="Default Research Objective",
+                    objective=req_topic,
                     steps=[
                         PlanStep(
                             order=1,
-                            action="Initial Discovery",
-                            rationale="Establish baseline evidence",
+                            action=f"State-of-the-Art Analysis & Baseline Evidence for {req_topic}",
+                            rationale=f"Gather foundational web evidence, benchmarks, and technical architecture for {req_topic}",
                         ),
                         PlanStep(
-                            order=2, action="Deep Ingestion", rationale="Extract factual claims"
+                            order=2,
+                            action=f"Deep Ingestion & Factual Claim Extraction for {req_topic}",
+                            rationale=f"Extract verifiable factual claims, key findings, and performance data for {req_topic}",
+                        ),
+                        PlanStep(
+                            order=3,
+                            action=f"Synthesis & Strategic Evaluation of {req_topic}",
+                            rationale=f"Compile final research report recommendations and executive insights for {req_topic}",
                         ),
                     ],
                 )
