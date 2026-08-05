@@ -18,7 +18,6 @@ from app.schemas.planner import PlannerRequest
 
 
 from app.core.settings import Settings
-from app.tools.arxiv import ArxivSearchClient
 from app.tools.duckduckgo import DuckDuckGoSearchClient
 from app.tools.serper import SerperSearchClient
 from app.tools.tavily import TavilySearchClient
@@ -34,7 +33,6 @@ class ResearchGraphNodes:
         self._searcher = SearchAgent(
             tavily_port=TavilySearchClient.from_settings(settings),
             serper_client=SerperSearchClient.from_settings(settings),
-            arxiv_client=ArxivSearchClient.from_settings(settings),
             ddg_client=DuckDuckGoSearchClient(),
         )
         self._reader = ReaderAgent()

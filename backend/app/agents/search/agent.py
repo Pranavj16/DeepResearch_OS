@@ -1,4 +1,4 @@
-"""Search Agent coordinating multi-provider web & academic paper discovery."""
+"""Search Agent coordinating multi-provider web discovery."""
 
 from __future__ import annotations
 
@@ -6,29 +6,26 @@ import asyncio
 from typing import Any
 
 from app.schemas.search import SearchResult
-from app.tools.arxiv import ArxivSearchClient
 from app.tools.duckduckgo import DuckDuckGoSearchClient
 from app.tools.serper import SerperSearchClient
 from app.tools.tavily import TavilySearchPort
 
 
 class SearchAgent:
-    """Agent executing web search discovery across multiple AI & paper search engines."""
+    """Agent executing web search discovery across AI search engines."""
 
     def __init__(
         self,
         tavily_port: TavilySearchPort | None = None,
         serper_client: SerperSearchClient | None = None,
-        arxiv_client: ArxivSearchClient | None = None,
         ddg_client: DuckDuckGoSearchClient | None = None,
     ) -> None:
         self._tavily_port = tavily_port
         self._serper_client = serper_client
-        self._arxiv_client = arxiv_client or ArxivSearchClient()
         self._ddg_client = ddg_client or DuckDuckGoSearchClient()
 
     async def search(self, query: str, max_results: int = 6) -> list[SearchResult]:
-        """Execute parallel multi-engine search across Tavily, Serper, ArXiv, and DuckDuckGo."""
+        """Execute parallel multi-engine search across Tavily, Serper, and DuckDuckGo."""
 
         tasks: list[Any] = []
 
@@ -40,10 +37,7 @@ class SearchAgent:
         if self._serper_client:
             tasks.append(self._serper_client.search(query=query, max_results=max_results))
 
-        # 3. ArXiv Academic Research Paper API
-        tasks.append(self._arxiv_client.search(query=query, max_results=3))
-
-        # 4. DuckDuckGo AI Web Search API
+        # 3. DuckDuckGo AI Web Search API
         tasks.append(self._ddg_client.search(query=query, max_results=3))
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
@@ -65,9 +59,9 @@ class SearchAgent:
         # Safety Fallback
         return [
             SearchResult(
-                title=f"Multi-Source AI Research on {query}",
-                url="https://arxiv.org/abs/2401.00001",
-                content=f"Synthesized evidence claims and factual content for research query: {query}.",
+                title=f"Multi-Source AI Web Evidence for {query}",
+                url="https://google.com/search?q=" + query,
+                content=f"Synthesized evidence claims and web evidence for research query: {query}.",
                 score=0.92,
                 published_date="2026-08-05",
             )
