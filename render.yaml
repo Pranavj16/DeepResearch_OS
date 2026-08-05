@@ -28,8 +28,10 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
 
-      # Search Engine API Key
+      # Search Engine API Keys
       - key: TAVILY_API_KEY
+        sync: false
+      - key: SERPER_API_KEY
         sync: false
 
       # Database, Caching & Vector Database Endpoints
@@ -60,6 +62,6 @@ services:
         fromService:
           type: web
           name: research-backend
-          property: host
+          property: url
       - key: SECRET_KEY
         generateValue: true
