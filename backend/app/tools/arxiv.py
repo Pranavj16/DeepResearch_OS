@@ -4,22 +4,35 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 import httpx
+from pydantic import SecretStr
 
+from app.core.settings import Settings
 from app.schemas.search import SearchResult
 
 
 class ArxivSearchClient:
     """Execute ArXiv academic paper API searches."""
 
-    def __init__(self, timeout_seconds: float = 15.0) -> None:
+    def __init__(self, api_key: SecretStr | None = None, timeout_seconds: float = 15.0) -> None:
+        self._api_key = api_key
         self._api_url = "http://export.arxiv.org/api/query"
         self._timeout_seconds = timeout_seconds
 
+    @classmethod
+    def from_settings(cls, settings: Settings) -> ArxivSearchClient:
+        key = settings.arxiv_api_key
+        return cls(api_key=SecretStr(key) if key else None)
+
     async def search(self, query: str, max_results: int = 4) -> list[SearchResult]:
         try:
+            headers = {}
+            if self._api_key and self._api_key.get_secret_value():
+                headers["Authorization"] = f"Bearer {self._api_key.get_secret_value()}"
+
             async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
                 res = await client.get(
                     self._api_url,
+                    headers=headers,
                     params={
                         "search_query": f"all:{query}",
                         "start": 0,

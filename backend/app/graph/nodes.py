@@ -34,7 +34,7 @@ class ResearchGraphNodes:
         self._searcher = SearchAgent(
             tavily_port=TavilySearchClient.from_settings(settings),
             serper_client=SerperSearchClient.from_settings(settings),
-            arxiv_client=ArxivSearchClient(),
+            arxiv_client=ArxivSearchClient.from_settings(settings),
             ddg_client=DuckDuckGoSearchClient(),
         )
         self._reader = ReaderAgent()

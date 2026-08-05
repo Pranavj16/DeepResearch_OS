@@ -134,6 +134,8 @@ class Settings(BaseSettings):
 
     SERPER_API_KEY: SecretStr = SecretStr("")
 
+    ARXIV_API_KEY: SecretStr = SecretStr("")
+
     BING_API_KEY: SecretStr = SecretStr("")
 
     PERPLEXITY_API_KEY: SecretStr = SecretStr("")
@@ -183,6 +185,13 @@ class Settings(BaseSettings):
         """Return the Serper key without exposing it in logs or repr output."""
 
         value = self.SERPER_API_KEY.get_secret_value()
+        return value or None
+
+    @property
+    def arxiv_api_key(self) -> str | None:
+        """Return the ArXiv key without exposing it in logs or repr output."""
+
+        value = self.ARXIV_API_KEY.get_secret_value()
         return value or None
 
     @property
