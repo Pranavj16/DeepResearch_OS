@@ -133,8 +133,18 @@ def live_execution_view(request: HttpRequest, run_id: str) -> HttpResponse:
     )
 
 
+def api_run_detail_proxy_view(request: HttpRequest, run_id: str) -> HttpResponse:
+    """Proxy backend GET /research/runs/{run_id} directly to browser JS for real-time status telemetry."""
+    import json
+    try:
+        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=10.0)
+        return HttpResponse(res.content, content_type="application/json", status=res.status_code)
+    except Exception as err:
+        return HttpResponse(json.dumps({"error": str(err)}), content_type="application/json", status=502)
+
+
 def events_stream_proxy_view(request: HttpRequest, run_id: str) -> StreamingHttpResponse:
-    """Proxy real-time SSE stream from backend FastAPI engine."""
+    """Proxy real-time SSE stream from backend FastAPI engine to frontend browser."""
 
     def stream_backend_events():
         try:
@@ -147,9 +157,13 @@ def events_stream_proxy_view(request: HttpRequest, run_id: str) -> StreamingHttp
                     if line:
                         yield f"{line.decode('utf-8')}\n\n"
         except Exception as err:
-            yield f'data: {{"event": "error", "message": "{err}"}}\n\n'
+            import json
+            yield f'data: {json.dumps({"event": "error", "stage": "intake", "message": str(err)})}\n\n'
 
-    return StreamingHttpResponse(stream_backend_events(), content_type="text/event-stream")
+    response = StreamingHttpResponse(stream_backend_events(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
 
 
 @require_auth
@@ -485,6 +499,7 @@ def admin_view(request: HttpRequest) -> HttpResponse:
 
 __all__ = [
     "admin_view",
+    "api_run_detail_proxy_view",
     "control_run_view",
     "create_run_view",
     "delete_run_view",

@@ -5,6 +5,7 @@ from django.urls import path
 
 from research.views import (
     admin_view,
+    api_run_detail_proxy_view,
     control_run_view,
     create_run_view,
     delete_run_view,
@@ -36,6 +37,7 @@ urlpatterns = [
     path('research/control/<str:run_id>', control_run_view, name='control_run'),
     path('research/delete/<str:run_id>', delete_run_view, name='delete_run'),
     path('api/v1/events/stream/<str:run_id>', events_stream_proxy_view, name='events_stream_proxy'),
+    path('api/v1/research/runs/<str:run_id>', api_run_detail_proxy_view, name='api_run_detail_proxy'),
     path('report/<str:run_id>', report_detail_view, name='report_detail'),
     path('knowledge', knowledge_view, name='knowledge'),
     path('memory', memory_view, name='memory'),
