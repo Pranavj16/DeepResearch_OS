@@ -164,10 +164,19 @@ class ResearchGraphNodes:
             provider=LLMProvider.GEMINI,
             model="gemini-2.5-flash",
         )
+        findings_formatted = "\n".join(f"- **Key Finding {idx+1}**: {f}" for idx, f in enumerate(draft.key_findings))
+        recommendations_formatted = "\n".join(f"{idx+1}. {r}" for idx, r in enumerate(draft.strategic_recommendations or []))
+        citations_list = draft.citations or [f"{s.get('title', 'Web Source')} - {s.get('url', '')}" for s in sources if s.get('url')]
+        citations_formatted = "\n".join(f"- [{idx+1}] {c}" for idx, c in enumerate(citations_list))
+
         report_str = (
-            f"# {draft.title}\n\n## Executive Summary\n{draft.executive_summary}\n\n## Key Findings\n"
-            + "\n".join(f"- {f}" for f in draft.key_findings)
-            + f"\n\n## Detailed Analysis\n{draft.detailed_analysis}"
+            f"# {draft.title}\n\n"
+            f"## Executive Summary\n{draft.executive_summary}\n\n"
+            f"## Background & Domain Context\n{draft.background_context}\n\n"
+            f"## Key Research Findings\n{findings_formatted}\n\n"
+            f"## Detailed Technical Analysis\n{draft.detailed_analysis}\n\n"
+            f"## Strategic Recommendations & Action Plan\n{recommendations_formatted}\n\n"
+            f"## Verified Sources & References\n{citations_formatted}"
         )
         return {
             "stage": "synthesize",

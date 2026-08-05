@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from pydantic import BaseModel, Field
 
 from app.llm.models import LLMProvider
@@ -13,8 +14,10 @@ class ReportDraft(BaseModel):
 
     title: str = Field(min_length=1)
     executive_summary: str = Field(min_length=1)
+    background_context: str = Field(default="Foundational context and domain background.")
     key_findings: list[str] = Field(min_length=1)
     detailed_analysis: str = Field(min_length=1)
+    strategic_recommendations: list[str] = Field(default_factory=lambda: ["Continue domain monitoring and evidence verification."])
     citations: list[str] = Field(default_factory=list)
 
 
@@ -57,7 +60,7 @@ class WriterAgent:
         system_prompt = (
             "You are a Senior Technical Writer AI. Synthesize the provided research plan, "
             "crawled source evidence, knowledge graph entities, and working memory "
-            "into a comprehensive, formal research report with inline citations."
+            "into a comprehensive, formal, multi-section research report with inline citations."
         )
         steps_str = "\n".join(f"- {s}" for s in (plan_steps or []))
         claims_str = "\n".join(f"- {c}" for c in evidence_claims)
