@@ -35,7 +35,7 @@ class ResearchGraphNodes:
             serper_client=SerperSearchClient.from_settings(settings),
             ddg_client=DuckDuckGoSearchClient(),
         )
-        self._reader = ReaderAgent()
+        self._reader = ReaderAgent(llm_router)
         self._knowledge = KnowledgeAgent()
         self._memory = MemoryAgent()
         self._writer = WriterAgent(llm_router)
@@ -93,14 +93,15 @@ class ResearchGraphNodes:
         """3. Extractor Agent using NVIDIA NIM (extracts factual claims from Searcher sources & Planner strategy)."""
 
         sources = state.get("sources", [])
-        plan_steps = state.get("plan_steps", [])
-        claims = []
-        for s in sources:
-            claims.append(f"Evidence from '{s['title']}' ({s['url']}): {s['content'][:300]}")
-        if plan_steps:
-            claims.append(f"Strategic Requirement ({plan_steps[0]}): Factual verification established.")
-        if not claims:
-            claims = ["Verified domain evidence claim."]
+        obj = state.get("objective", "Research Objective")
+
+        claims = await self._reader.extract_claims(
+            objective=obj,
+            sources=sources,
+            provider=LLMProvider.NVIDIA,
+            model="z-ai/glm-5.2",
+        )
+
         return {
             "stage": "extract",
             "claims": claims,
