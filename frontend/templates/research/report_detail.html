@@ -31,10 +31,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Markdown Document Canvas -->
         <div class="lg:col-span-2 bg-surface-card rounded-2xl border border-surface-border p-8 shadow-2xl space-y-6">
-            <div id="markdown-target" class="prose prose-invert max-w-none text-zinc-200 leading-relaxed space-y-4">
+            <!-- Hidden Raw Markdown Data Source -->
+            <textarea id="markdown-raw" class="hidden">{{ run.draft_report }}</textarea>
+
+            <!-- Rendered Markdown Target -->
+            <div id="markdown-target" class="prose prose-invert max-w-none text-zinc-100 leading-relaxed space-y-4">
                 {{ run.draft_report|linebreaks }}
             </div>
-            <script id="markdown-raw" type="text/template">{{ run.draft_report }}</script>
         </div>
 
         <!-- Citation & Evidence Sidebar -->
@@ -83,10 +86,51 @@
 </div>
 
 <script>
+    function renderMarkdownFallback(text) {
+        if (!text) return "";
+        let html = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Format headings
+        html = html.replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-zinc-100 mt-4 mb-2">$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-zinc-100 mt-6 mb-3 border-b border-zinc-800 pb-2">$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1 class="text-xl font-extrabold text-zinc-100 mt-8 mb-4 border-b border-zinc-700 pb-2">$1</h1>');
+        
+        // Format bold & italic
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-zinc-100">$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em class="italic text-zinc-300">$1</em>');
+
+        // Format lists
+        html = html.replace(/^\s*[\-\*] (.*$)/gim, '<li class="ml-4 list-disc text-zinc-300 my-1">$1</li>');
+
+        // Format code blocks
+        html = html.replace(/```([\s\S]*?)```/g, '<pre class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 font-mono text-xs text-zinc-200 overflow-x-auto my-3"><code>$1</code></pre>');
+
+        // Paragraph line breaks
+        html = html.replace(/\n\n/g, '</p><p class="text-zinc-200 text-sm leading-relaxed my-3">');
+
+        return '<p class="text-zinc-200 text-sm leading-relaxed my-3">' + html + '</p>';
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
-        const rawContent = document.getElementById("markdown-raw").innerHTML;
-        if (typeof marked !== 'undefined' && rawContent.trim()) {
-            document.getElementById("markdown-target").innerHTML = marked.parse(rawContent);
+        const rawElem = document.getElementById("markdown-raw");
+        const targetElem = document.getElementById("markdown-target");
+        
+        if (rawElem && targetElem) {
+            const rawText = rawElem.value || rawElem.textContent || "";
+            if (rawText.trim()) {
+                if (typeof marked !== 'undefined') {
+                    try {
+                        targetElem.innerHTML = marked.parse(rawText);
+                    } catch (e) {
+                        targetElem.innerHTML = renderMarkdownFallback(rawText);
+                    }
+                } else {
+                    targetElem.innerHTML = renderMarkdownFallback(rawText);
+                }
+            }
         }
     });
 </script>

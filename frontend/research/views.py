@@ -243,10 +243,16 @@ def report_detail_view(request: HttpRequest, run_id: str) -> HttpResponse:
 
     try:
         res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=5.0)
-        run_data = res.json()
+        run_data = res.json() if res.status_code == 200 else {}
         run_data["run_id"] = str(run_data.get("id", run_id))
-        run_data["draft_report"] = run_data.get("result_summary") or run_data.get("draft_report", "")
-        run_data["details"] = run_data.get("details", {})
+        details_dict = run_data.get("details") or {}
+        run_data["draft_report"] = (
+            details_dict.get("draft_report")
+            or run_data.get("result_summary")
+            or run_data.get("draft_report")
+            or "No report content generated."
+        )
+        run_data["details"] = details_dict
     except Exception:
         run_data = {
             "run_id": run_id,
