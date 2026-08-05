@@ -206,23 +206,26 @@ def delete_run_view(request: HttpRequest, run_id: str) -> HttpResponse:
     if request.method in ["DELETE", "POST"]:
         clean_id = run_id.replace("-", "").lower()
 
-        # Instant direct SQLite deletion for guaranteed persistence
-        try:
-            import sqlite3
-            conn = sqlite3.connect("../backend/storage/db.sqlite3")
-            cursor = conn.cursor()
-            cursor.execute(
-                "DELETE FROM research_runs WHERE replace(lower(id), '-', '') = ?",
-                (clean_id,),
-            )
-            conn.commit()
-            conn.close()
-        except Exception as db_err:
-            print(f"[FRONTEND DIRECT DB DELETE ERROR]: {db_err}")
-
-        # Also attempt backend REST call
+        # Primary deletion via FastAPI backend REST API
         try:
             requests.delete(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=5.0)
+        except Exception as api_err:
+            print(f"[FRONTEND REST DELETE NOTICE]: {api_err}")
+
+        # Local SQLite deletion fallback for local single-process development
+        try:
+            import os
+            import sqlite3
+            for db_path in ["../backend/storage/db.sqlite3", "storage/db.sqlite3"]:
+                if os.path.exists(db_path):
+                    conn = sqlite3.connect(db_path)
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "DELETE FROM research_runs WHERE replace(lower(id), '-', '') = ?",
+                        (clean_id,),
+                    )
+                    conn.commit()
+                    conn.close()
         except Exception:
             pass
 
