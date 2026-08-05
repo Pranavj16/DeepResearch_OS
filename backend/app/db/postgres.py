@@ -29,8 +29,10 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
 
     url = database_url or get_settings().DATABASE_URL
     if not url:
-        # Default in-memory SQLite for testing if no URL provided
-        url = "sqlite+aiosqlite:///:memory:"
+        # Default persistent file-based SQLite database for durable storage
+        db_dir = Path("storage")
+        db_dir.mkdir(parents=True, exist_ok=True)
+        url = "sqlite+aiosqlite:///storage/db.sqlite3"
     elif url.startswith("postgresql://"):
         # Convert dialect for asyncpg driver if needed
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)

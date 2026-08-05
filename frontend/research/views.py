@@ -339,8 +339,9 @@ def login_view(request: HttpRequest) -> HttpResponse:
             if res.status_code == 200:
                 data = res.json()
                 response = redirect("index")
-                response.set_cookie("access_token", data.get("access_token", ""))
-                response.set_cookie("user_email", email)
+                cookie_max_age = 30 * 24 * 60 * 60  # 30 days persistence
+                response.set_cookie("access_token", data.get("access_token", ""), max_age=cookie_max_age, samesite="Lax")
+                response.set_cookie("user_email", email, max_age=cookie_max_age, samesite="Lax")
                 return response
             else:
                 detail = res.json().get("detail", "Invalid email or password.")
@@ -369,8 +370,9 @@ def signup_view(request: HttpRequest) -> HttpResponse:
             if res.status_code == 200:
                 data = res.json()
                 response = redirect("index")
-                response.set_cookie("access_token", data.get("access_token", ""))
-                response.set_cookie("user_email", email)
+                cookie_max_age = 30 * 24 * 60 * 60  # 30 days persistence
+                response.set_cookie("access_token", data.get("access_token", ""), max_age=cookie_max_age, samesite="Lax")
+                response.set_cookie("user_email", email, max_age=cookie_max_age, samesite="Lax")
                 return response
             else:
                 detail = res.json().get("detail", "Registration failed.")
