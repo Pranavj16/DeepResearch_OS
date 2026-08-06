@@ -385,22 +385,18 @@ function executionApp(runId, initialStatus, initialStage) {
 
         async pollBackendStatus() {
             try {
-                const res = await fetch('/research/status/' + this.runId);
-                if (!res.ok) return;
-                const html = await res.text();
-                
-                // Fetch structured backend data
                 const apiRes = await fetch('/api/v1/research/runs/' + this.runId);
                 if (apiRes.ok) {
                     const data = await apiRes.json();
+                    if (data.title) this.title = data.title;
                     if (data.objective) this.objective = data.objective;
                     if (data.stage) {
                         this.currentStage = data.stage;
                         this.updateProgressFromStage(data.stage);
                     }
                     if (data.details) {
-                        if (data.details.sources) this.sources = data.details.sources;
-                        if (data.details.claims) this.claims = data.details.claims;
+                        if (data.details.sources && data.details.sources.length > 0) this.sources = data.details.sources;
+                        if (data.details.claims && data.details.claims.length > 0) this.claims = data.details.claims;
                         if (data.details.draft_report) this.writerStream = data.details.draft_report;
                         if (data.details.critique_score) this.critiqueScore = data.details.critique_score;
                     }
@@ -408,8 +404,7 @@ function executionApp(runId, initialStatus, initialStage) {
                         this.writerStream = data.result_summary;
                     }
                     
-                    // Only mark as completed when backend explicitly confirms completed status AND report is present
-                    if (data.status === 'completed' && (this.writerStream || data.stage === 'finalize')) {
+                    if (data.status === 'completed' || data.stage === 'finalize' || data.stage === 'completed') {
                         this.status = 'completed';
                         this.progressPercent = 100;
                         this.progressStageLabel = 'Execution Completed';
