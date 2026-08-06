@@ -38,9 +38,10 @@ def require_auth(view_func: Any) -> Any:
 
 @require_auth
 def index_view(request: HttpRequest) -> HttpResponse:
-    """Render main research assistant dashboard with history."""
+    """Render main research assistant dashboard with history isolated to user workspace."""
 
     recent_runs: list[dict[str, Any]] = []
+    user_email = request.COOKIES.get("user_email", "")
     try:
         res = requests.get(f"{BACKEND_API_URL}/health", timeout=5.0)
         health = res.json() if res.status_code == 200 else {}
@@ -48,7 +49,7 @@ def index_view(request: HttpRequest) -> HttpResponse:
         health = {"status": "degraded"}
 
     try:
-        runs_res = requests.get(f"{BACKEND_API_URL}/research/history", timeout=5.0)
+        runs_res = requests.get(f"{BACKEND_API_URL}/research/history", params={"user_email": user_email}, timeout=5.0)
         if runs_res.status_code == 200:
             for item in runs_res.json():
                 item["run_id"] = str(item.get("id"))
@@ -63,7 +64,7 @@ def index_view(request: HttpRequest) -> HttpResponse:
         {
             "recent_runs": recent_runs,
             "health": health,
-            "user_email": request.COOKIES.get("user_email", "Researcher"),
+            "user_email": user_email or "Researcher",
         },
     )
 
@@ -113,8 +114,9 @@ def create_run_view(request: HttpRequest) -> HttpResponse:
 def live_execution_view(request: HttpRequest, run_id: str) -> HttpResponse:
     """Render flagship real-time multi-agent execution screen."""
 
+    user_email = request.COOKIES.get("user_email", "")
     try:
-        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=5.0)
+        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", params={"user_email": user_email}, timeout=5.0)
         run_data = res.json()
         run_data["run_id"] = str(run_data.get("id", run_id))
     except Exception:
@@ -129,15 +131,16 @@ def live_execution_view(request: HttpRequest, run_id: str) -> HttpResponse:
     return render(
         request,
         "research/execution.html",
-        {"run": run_data, "user_email": request.COOKIES.get("user_email", "Researcher")},
+        {"run": run_data, "user_email": user_email or "Researcher"},
     )
 
 
 def api_run_detail_proxy_view(request: HttpRequest, run_id: str) -> HttpResponse:
     """Proxy backend GET /research/runs/{run_id} directly to browser JS for real-time status telemetry."""
     import json
+    user_email = request.COOKIES.get("user_email", "")
     try:
-        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=10.0)
+        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", params={"user_email": user_email}, timeout=10.0)
         return HttpResponse(res.content, content_type="application/json", status=res.status_code)
     except Exception as err:
         return HttpResponse(json.dumps({"error": str(err)}), content_type="application/json", status=502)
@@ -215,14 +218,15 @@ def control_run_view(request: HttpRequest, run_id: str) -> HttpResponse:
 @csrf_exempt
 @require_auth
 def delete_run_view(request: HttpRequest, run_id: str) -> HttpResponse:
-    """Handle deletion of a research run from history/chat with instant SQLite deletion."""
+    """Handle deletion of a research run isolated by user workspace."""
 
     if request.method in ["DELETE", "POST"]:
         clean_id = run_id.replace("-", "").lower()
+        user_email = request.COOKIES.get("user_email", "")
 
         # Primary deletion via FastAPI backend REST API
         try:
-            requests.delete(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=5.0)
+            requests.delete(f"{BACKEND_API_URL}/research/runs/{run_id}", params={"user_email": user_email}, timeout=5.0)
         except Exception as api_err:
             print(f"[FRONTEND REST DELETE NOTICE]: {api_err}")
 
@@ -256,14 +260,15 @@ def delete_run_view(request: HttpRequest, run_id: str) -> HttpResponse:
 
 @require_auth
 def report_detail_view(request: HttpRequest, run_id: str) -> HttpResponse:
-    """Render comprehensive research report viewer with robust REST API and local SQLite fallback."""
+    """Render comprehensive research report viewer isolated by user workspace."""
 
     clean_id = run_id.replace("-", "").lower()
+    user_email = request.COOKIES.get("user_email", "")
     run_data = {}
 
     # Primary: Attempt backend REST API request
     try:
-        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", timeout=5.0)
+        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", params={"user_email": user_email}, timeout=5.0)
         if res.status_code == 200:
             run_data = res.json()
     except Exception as err:
@@ -420,12 +425,13 @@ def research_wizard_view(request: HttpRequest) -> HttpResponse:
 
 @require_auth
 def knowledge_view(request: HttpRequest) -> HttpResponse:
-    """Render Knowledge & RAG Index Explorer with dynamic user research artifacts."""
+    """Render Knowledge & RAG Index Explorer with dynamic user research artifacts isolated by user workspace."""
     runs = []
     sources = []
     claims = []
+    user_email = request.COOKIES.get("user_email", "")
     try:
-        res = requests.get(f"{BACKEND_API_URL}/research/runs", timeout=5.0)
+        res = requests.get(f"{BACKEND_API_URL}/research/runs", params={"user_email": user_email}, timeout=5.0)
         if res.status_code == 200:
             runs = res.json()
             for r in runs:
@@ -447,7 +453,7 @@ def knowledge_view(request: HttpRequest) -> HttpResponse:
             "runs": runs,
             "sources": sources,
             "claims": claims,
-            "user_email": request.COOKIES.get("user_email", "Researcher"),
+            "user_email": user_email or "Researcher",
         },
     )
 

@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -141,13 +141,21 @@ async def create_research_run(
 
 
 @router.get("/history", response_model=list[ResearchRunResponse])
+@router.get("/runs", response_model=list[ResearchRunResponse])
 async def list_research_runs(
+    user_email: str | None = Query(None),
     session: AsyncSession = Depends(get_session),
-    limit: int = 10,
+    limit: int = 50,
 ) -> list[ResearchRunResponse]:
-    """List recent research runs."""
+    """List recent research runs isolated to the user's workspace."""
 
-    stmt = select(ResearchRunModel).order_by(ResearchRunModel.created_at.desc()).limit(limit)
+    stmt = select(ResearchRunModel)
+    if user_email:
+        ws_service = WorkspaceService(session)
+        org, proj, ws, env, user = await ws_service.get_or_create_default_tenancy(user_email)
+        stmt = stmt.where(ResearchRunModel.workspace_id == ws.id)
+
+    stmt = stmt.order_by(ResearchRunModel.created_at.desc()).limit(limit)
     res = await session.execute(stmt)
     runs = res.scalars().all()
 
@@ -171,12 +179,19 @@ async def list_research_runs(
 @router.get("/runs/{run_id}", response_model=ResearchRunResponse)
 async def get_research_run(
     run_id: str,
+    user_email: str | None = Query(None),
     session: AsyncSession = Depends(get_session),
 ) -> ResearchRunResponse:
-    """Retrieve details for a research run with unhyphenated UUID string matching."""
+    """Retrieve details for a research run isolated by user workspace."""
 
     clean_id = run_id.replace("-", "").lower()
     stmt = select(ResearchRunModel)
+
+    if user_email:
+        ws_service = WorkspaceService(session)
+        org, proj, ws, env, user = await ws_service.get_or_create_default_tenancy(user_email)
+        stmt = stmt.where(ResearchRunModel.workspace_id == ws.id)
+
     res = await session.execute(stmt)
     all_runs = res.scalars().all()
     run = None
@@ -205,12 +220,19 @@ async def get_research_run(
 @router.api_route("/runs/{run_id}", methods=["DELETE", "POST"], status_code=status.HTTP_204_NO_CONTENT)
 async def delete_research_run(
     run_id: str,
+    user_email: str | None = Query(None),
     session: AsyncSession = Depends(get_session),
 ) -> None:
-    """Delete a research run by ID with unhyphenated UUID string matching."""
+    """Delete a research run isolated by user workspace."""
 
     clean_id = run_id.replace("-", "").lower()
     stmt = select(ResearchRunModel)
+
+    if user_email:
+        ws_service = WorkspaceService(session)
+        org, proj, ws, env, user = await ws_service.get_or_create_default_tenancy(user_email)
+        stmt = stmt.where(ResearchRunModel.workspace_id == ws.id)
+
     res = await session.execute(stmt)
     all_runs = res.scalars().all()
     run = None
