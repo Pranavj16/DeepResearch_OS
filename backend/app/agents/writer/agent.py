@@ -58,9 +58,15 @@ class WriterAgent:
                 provider = available[0]
 
         system_prompt = (
-            "You are a Senior Technical Writer AI. Synthesize the provided research plan, "
-            "crawled source evidence, knowledge graph entities, and working memory "
-            "into a comprehensive, formal, multi-section research report with inline citations."
+            "You are a World-Class Principal Analyst & Lead Research Author at a premier research institute (like McKinsey, Gartner, or OpenAI Deep Research). "
+            "Your mission is to synthesize the provided research plan, web evidence, factual claims, and knowledge objects into an authoritative, "
+            "in-depth, multi-section formal research report.\n\n"
+            "CRITICAL INSTRUCTIONS FOR HIGH QUALITY:\n"
+            "1. DO NOT use generic, repetitive boilerplate phrases such as 'This formal research report provides an in-depth investigation into...' or 'Evidence directly confirms key structural takeaways for...'.\n"
+            "2. Write rich, engaging, highly informative, domain-specific paragraphs with concrete insights, real-world examples, technological breakdowns, and market trends.\n"
+            "3. Structure key findings as comprehensive, analytical takeaways rather than short snippets.\n"
+            "4. Detailed analysis MUST include multiple structured subsections (e.g., Architectural Shifts, Operational Impact, Compliance & Security, Industry Case Studies).\n"
+            "5. Strategic recommendations MUST be actionable, enterprise-ready advice tailored to the domain."
         )
         steps_str = "\n".join(f"- {s}" for s in (plan_steps or []))
         claims_str = "\n".join(f"- {c}" for c in evidence_claims)
@@ -68,12 +74,20 @@ class WriterAgent:
         know_str = "\n".join(f"- Topic: {k.get('topic')}, Claims: {k.get('claims')}" for k in (knowledge_objects or []))
 
         user_prompt = (
-            f"Research Objective: {objective}\n\n"
-            f"1. Research Plan Steps (Planner Agent Output):\n{steps_str or 'N/A'}\n\n"
-            f"2. Crawled Web Sources (Search Agent Output):\n{sources_str or 'N/A'}\n\n"
-            f"3. Verified Evidence Claims (Extractor Agent Output):\n{claims_str or 'N/A'}\n\n"
-            f"4. Knowledge Graph Matrix (Knowledge Agent Output):\n{know_str or 'N/A'}\n\n"
-            f"5. Agent Memory Context (Memory Agent Output):\n{memory_context or 'N/A'}"
+            f"RESEARCH TOPIC / OBJECTIVE: {objective}\n\n"
+            f"Please write an extensive, professional deep-research report covering:\n"
+            f"- Executive Summary: Strategic overview and key implications.\n"
+            f"- Background & Domain Context: Historical evolution, industry drivers, and current market state.\n"
+            f"- Key Research Findings: 5 to 7 detailed, high-impact research findings with domain specifics.\n"
+            f"- Detailed Technical Analysis: In-depth technical breakdown with markdown headers and sub-sections.\n"
+            f"- Strategic Recommendations: 4 actionable, enterprise-grade recommendations.\n"
+            f"- Citations: Exact web source references.\n\n"
+            f"PRIMARY INPUT EVIDENCE & SOURCES:\n"
+            f"1. Research Plan Steps:\n{steps_str or 'N/A'}\n\n"
+            f"2. Crawled Web Sources:\n{sources_str or 'N/A'}\n\n"
+            f"3. Verified Evidence Claims:\n{claims_str or 'N/A'}\n\n"
+            f"4. Knowledge Graph Context:\n{know_str or 'N/A'}\n\n"
+            f"5. Memory Context:\n{memory_context or 'N/A'}"
         )
 
         return await self._llm_router.generate_structured(
