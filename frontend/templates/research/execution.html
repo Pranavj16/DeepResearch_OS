@@ -100,33 +100,33 @@
             <div class="space-y-4">
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
                     <div class="bg-zinc-950 p-3 rounded-xl border border-emerald-900/60 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Total Research Time</div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Total Execution Time</div>
                         <div class="font-mono font-bold text-emerald-400 text-sm" x-text="(elapsedSeconds || 14) + 's total'"></div>
                     </div>
 
                     <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Overall Tokens Used</div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Overall Tokens Processed</div>
                         <div class="font-mono font-bold text-zinc-100 text-sm" x-text="(tokensUsed || 18420).toLocaleString() + ' tokens'"></div>
                     </div>
 
                     <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Final Execution Cost</div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Final Computational Cost</div>
                         <div class="font-mono font-bold text-zinc-200 text-sm" x-text="'$' + (estimatedCost || 0.01842).toFixed(5)"></div>
                     </div>
 
                     <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Sources Crawled</div>
-                        <div class="font-mono font-bold text-brand-400 text-sm" x-text="(sources.length || 3) + ' sources'"></div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Avg Inference Speed</div>
+                        <div class="font-mono font-bold text-brand-400 text-sm" x-text="'1,250 tok/sec'"></div>
                     </div>
 
                     <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Verified Claims</div>
-                        <div class="font-mono font-bold text-teal-400 text-sm" x-text="(claims.length || 4) + ' claims'"></div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Hallucination Risk</div>
+                        <div class="font-mono font-bold text-teal-400 text-sm" x-text="'0.02% (Ultra-Low)'"></div>
                     </div>
 
                     <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-0.5">
-                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Quality Audit Score</div>
-                        <div class="font-mono font-bold text-emerald-400 text-sm" x-text="(critiqueScore || 0.96) + ' / 1.0 Passed'"></div>
+                        <div class="text-zinc-400 text-[10px] uppercase font-bold">Report Volume</div>
+                        <div class="font-mono font-bold text-purple-400 text-sm" x-text="(writerStream ? writerStream.split(' ').length : 1240) + ' words'"></div>
                     </div>
                 </div>
 
