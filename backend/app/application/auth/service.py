@@ -60,7 +60,8 @@ class AuthApplicationService:
     async def register(self, req: RegisterUserRequest) -> AuthTokenResponse:
         """Register a new user, password hash, and default tenant org."""
 
-        existing = await self._users.get_by_email(req.email)
+        clean_email = req.email.strip().lower()
+        existing = await self._users.get_by_email(clean_email)
         if existing:
             raise ValidationError("User with this email already exists.")
 
@@ -70,7 +71,7 @@ class AuthApplicationService:
         hashed = PasswordHasher.hash_password(req.password)
         user = UserModel(
             organization_id=org.id,
-            email=req.email,
+            email=clean_email,
             password_hash=hashed,
             role="owner",
             is_active=True,
@@ -96,7 +97,8 @@ class AuthApplicationService:
     async def login(self, req: LoginUserRequest) -> AuthTokenResponse:
         """Authenticate user credentials and issue tokens."""
 
-        user = await self._users.get_by_email(req.email)
+        clean_email = req.email.strip().lower()
+        user = await self._users.get_by_email(clean_email)
         if not user or not user.password_hash:
             raise AuthorizationError("Invalid email or password.")
 

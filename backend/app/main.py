@@ -52,6 +52,20 @@ app = FastAPI(
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.exceptions.base import ApplicationError
+
+
+@app.exception_handler(ApplicationError)
+async def application_error_handler(request: Request, exc: ApplicationError):
+    """Map application domain errors to HTTP responses with appropriate status code."""
+    status_code = 401 if exc.status_code in [401, 403] else exc.status_code
+    return JSONResponse(
+        status_code=status_code,
+        content={"detail": exc.message, "code": exc.code, "details": exc.details},
+    )
+
 app.include_router(
     api_router,
     prefix=settings.API_PREFIX,
