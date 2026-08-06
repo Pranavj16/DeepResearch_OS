@@ -27,6 +27,24 @@
         </div>
     </div>
 
+    {% if not run.draft_report or run.stage != "completed" and run.stage != "finalize" %}
+    <div class="p-6 rounded-2xl bg-zinc-900 border border-brand-800/80 shadow-2xl space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="w-3 h-3 rounded-full bg-brand-400 animate-ping shrink-0"></span>
+                <div>
+                    <h3 class="text-sm font-bold text-zinc-100">Live Agent Research Execution In Progress</h3>
+                    <p class="text-xs text-zinc-400 mt-0.5">Specialist AI agents are currently crawling sources and drafting this report.</p>
+                </div>
+            </div>
+            <a href="/research/live/{{ run.run_id }}" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition shrink-0 flex items-center space-x-1.5">
+                <span>Watch Live Agent Execution Stream</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Report Body and Citation Sidebar (Notion Minimalist Layout) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Markdown Document Canvas -->
@@ -36,7 +54,14 @@
 
             <!-- Rendered Markdown Target -->
             <div id="markdown-target" class="prose prose-invert max-w-none text-zinc-100 leading-relaxed space-y-4">
-                {{ run.draft_report|linebreaks }}
+                {% if run.draft_report %}
+                    {{ run.draft_report|linebreaks }}
+                {% else %}
+                    <div class="p-8 text-center space-y-3 font-mono text-xs text-zinc-400">
+                        <div class="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mx-auto"></div>
+                        <p>Drafting comprehensive 7-section report... Report will populate dynamically once Writer Agent finishes.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
