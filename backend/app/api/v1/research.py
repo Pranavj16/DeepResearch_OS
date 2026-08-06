@@ -36,7 +36,7 @@ async def _execute_graph_in_background(
     objective: str,
     llm_router: LLMRouter,
 ):
-    """Execute LangGraph multi-agent research graph asynchronously in background task."""
+    """Execute LangGraph multi-agent research graph asynchronously with real-time DB stage updates."""
     engine = create_engine_from_url()
     session_factory = create_session_factory(engine)
     async with session_factory() as session:
@@ -55,21 +55,44 @@ async def _execute_graph_in_background(
                 "objective": objective,
                 "stage": "intake",
             }
-            res_state = await graph.ainvoke(
+
+            final_state = dict(initial_state)
+
+            # Stream execution node-by-node so DB updates in real time
+            async for output in graph.astream(
                 initial_state,
                 config={"configurable": {"thread_id": str(run.id)}},
-            )
+            ):
+                for node_name, node_output in output.items():
+                    if isinstance(node_output, dict):
+                        final_state.update(node_output)
+                        stage_val = node_output.get("stage", node_name)
+                        run.stage = stage_val
+
+                        # Preserve accumulative details
+                        current_details = dict(run.details or {})
+                        if "plan_steps" in node_output:
+                            current_details["plan_steps"] = node_output["plan_steps"]
+                        if "sources" in node_output:
+                            current_details["sources"] = node_output["sources"]
+                        if "claims" in node_output:
+                            current_details["claims"] = node_output["claims"]
+                        if "draft_report" in node_output:
+                            current_details["draft_report"] = node_output["draft_report"]
+                            run.result_summary = node_output["draft_report"]
+                        if "critique_score" in node_output:
+                            current_details["critique_score"] = node_output["critique_score"]
+                            current_details["critique_passed"] = node_output.get("critique_passed", True)
+
+                        run.details = current_details
+                        await session.commit()
+
             run.status = "completed"
-            run.stage = res_state.get("stage", "finalize")
-            run.result_summary = res_state.get("draft_report", "Research finished.")
-            run.details = {
-                "plan_steps": res_state.get("plan_steps", []),
-                "sources": res_state.get("sources", []),
-                "claims": res_state.get("claims", []),
-                "critique_score": res_state.get("critique_score", 0.95),
-                "critique_passed": res_state.get("critique_passed", True),
-                "draft_report": res_state.get("draft_report", ""),
-            }
+            run.stage = final_state.get("stage", "finalize")
+            run.result_summary = final_state.get("draft_report", "Research finished.")
+            details_dict = dict(run.details or {})
+            details_dict["draft_report"] = final_state.get("draft_report", "")
+            run.details = details_dict
             await session.commit()
         except Exception as err:
             run.status = "failed"
