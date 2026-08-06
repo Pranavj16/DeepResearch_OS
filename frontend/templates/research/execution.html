@@ -51,10 +51,12 @@
                     <button @click="cancelExecution()" class="px-3.5 py-2 rounded-xl border border-red-800 bg-red-950/40 text-red-300 hover:bg-red-900/60 font-semibold text-xs transition">Cancel</button>
                 </template>
 
-                <a :href="'/report/' + runId" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition flex items-center space-x-1.5">
-                    <span>Open Report</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
+                <template x-if="status === 'completed'">
+                    <a :href="'/report/' + runId" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition flex items-center space-x-1.5">
+                        <span>Open Report</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </template>
             </div>
         </div>
 

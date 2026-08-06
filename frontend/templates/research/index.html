@@ -92,13 +92,17 @@
                     <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed">{{ run.objective }}</p>
                 </div>
                 <div class="flex items-center space-x-2 self-start md:self-auto shrink-0">
-                    <a href="/research/live/{{ run.run_id }}" class="px-3.5 py-2 rounded-xl bg-surface-base border border-zinc-800 hover:border-zinc-600 text-zinc-300 font-medium text-xs transition flex items-center space-x-1">
-                        <span>Watch Execution</span>
-                    </a>
+                    {% if run.status == "completed" or run.stage == "completed" or run.stage == "finalize" %}
                     <a href="/report/{{ run.run_id }}" class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-black font-medium text-xs transition shadow-sm whitespace-nowrap flex items-center space-x-1">
                         <span>View Report & Chat</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
+                    {% else %}
+                    <a href="/research/live/{{ run.run_id }}" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs transition flex items-center space-x-1.5 shadow-md">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                        <span>Watch Live Execution</span>
+                    </a>
+                    {% endif %}
                     <button hx-delete="/research/delete/{{ run.run_id }}"
                             hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                             hx-target="closest .run-item"
