@@ -23,6 +23,11 @@ if raw_backend_url:
 BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
 
+try:
+    import jwt
+except ImportError:
+    jwt = None
+
 def require_auth(view_func: Any) -> Any:
     """Decorator requiring a valid, non-expired access token cookie before rendering protected views."""
 
@@ -32,27 +37,22 @@ def require_auth(view_func: Any) -> Any:
         if not token:
             return redirect("login")
 
-        secret_key = os.environ.get("SECRET_KEY", "deep-research-production-secret-key-2026")
-
-        try:
-            import jwt
-
-            jwt.decode(token, secret_key, algorithms=["HS256"], options={"verify_signature": True})
-        except jwt.ExpiredSignatureError:
-            # Token signature is expired - purge bad cookies and redirect to login
-            response = redirect("login")
-            response.delete_cookie("access_token")
-            response.delete_cookie("user_email")
-            return response
-        except jwt.InvalidTokenError:
-            # Token signature is invalid - purge bad cookies and redirect to login
-            response = redirect("login")
-            response.delete_cookie("access_token")
-            response.delete_cookie("user_email")
-            return response
-        except Exception:
-            # Fallback if PyJWT environment behavior differs: preserve session if token exists
-            pass
+        if jwt is not None:
+            secret_key = os.environ.get("SECRET_KEY", "deep-research-production-secret-key-2026")
+            try:
+                jwt.decode(token, secret_key, algorithms=["HS256"])
+            except getattr(jwt, "ExpiredSignatureError", Exception):
+                response = redirect("login")
+                response.delete_cookie("access_token")
+                response.delete_cookie("user_email")
+                return response
+            except getattr(jwt, "InvalidTokenError", Exception):
+                response = redirect("login")
+                response.delete_cookie("access_token")
+                response.delete_cookie("user_email")
+                return response
+            except Exception:
+                pass
 
         return view_func(request, *args, **kwargs)
 
