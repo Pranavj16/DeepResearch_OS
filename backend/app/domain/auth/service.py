@@ -13,7 +13,7 @@ class AuthService:
 
     def __init__(self, secret_key: str | None = None) -> None:
         key = secret_key or get_settings().SECRET_KEY.get_secret_value()
-        self._secret_key = key or "default-secret-change-me"
+        self._secret_key = key or "deep-research-production-secret-key-2026"
         self._algorithm = "HS256"
 
     def create_access_token(

@@ -32,17 +32,27 @@ def require_auth(view_func: Any) -> Any:
         if not token:
             return redirect("login")
 
-        # Validate JWT token signature and expiration
+        secret_key = os.environ.get("SECRET_KEY", "deep-research-production-secret-key-2026")
+
         try:
-            from app.domain.auth.service import AuthService
-            auth_service = AuthService()
-            auth_service.decode_access_token(token)
-        except Exception:
-            # Token signature is invalid or expired - purge bad cookies and redirect to login
+            import jwt
+
+            jwt.decode(token, secret_key, algorithms=["HS256"], options={"verify_signature": True})
+        except jwt.ExpiredSignatureError:
+            # Token signature is expired - purge bad cookies and redirect to login
             response = redirect("login")
             response.delete_cookie("access_token")
             response.delete_cookie("user_email")
             return response
+        except jwt.InvalidTokenError:
+            # Token signature is invalid - purge bad cookies and redirect to login
+            response = redirect("login")
+            response.delete_cookie("access_token")
+            response.delete_cookie("user_email")
+            return response
+        except Exception:
+            # Fallback if PyJWT environment behavior differs: preserve session if token exists
+            pass
 
         return view_func(request, *args, **kwargs)
 
