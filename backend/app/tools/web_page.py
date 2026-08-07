@@ -74,11 +74,22 @@ class _ReadableTextParser(HTMLParser):
 
 
 def extract_readable_content(html: str) -> tuple[str | None, str]:
-    """Extract a page title and normalized visible text from HTML."""
-    parser = _ReadableTextParser()
-    parser.feed(html)
-    parser.close()
-    return parser.title, parser.content
+    """Extract a page title and normalized visible text from HTML using BeautifulSoup4."""
+    try:
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "html.parser")
+        for element in soup(["script", "style", "noscript", "svg", "template", "head", "iframe", "footer", "nav"]):
+            element.decompose()
+
+        title = soup.title.string.strip() if soup.title and soup.title.string else None
+        content = " ".join(soup.get_text(separator=" ", strip=True).split())
+        return title, content
+    except Exception:
+        parser = _ReadableTextParser()
+        parser.feed(html)
+        parser.close()
+        return parser.title, parser.content
 
 
 class HttpxPageDownloader:
