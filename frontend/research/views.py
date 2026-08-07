@@ -24,13 +24,26 @@ BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
 
 def require_auth(view_func: Any) -> Any:
-    """Decorator requiring a valid access token cookie before rendering protected views."""
+    """Decorator requiring a valid, non-expired access token cookie before rendering protected views."""
 
     @wraps(view_func)
     def _wrapped_view(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         token = request.COOKIES.get("access_token")
         if not token:
             return redirect("login")
+
+        # Validate JWT token signature and expiration
+        try:
+            from app.domain.auth.service import AuthService
+            auth_service = AuthService()
+            auth_service.decode_access_token(token)
+        except Exception:
+            # Token signature is invalid or expired - purge bad cookies and redirect to login
+            response = redirect("login")
+            response.delete_cookie("access_token")
+            response.delete_cookie("user_email")
+            return response
+
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view

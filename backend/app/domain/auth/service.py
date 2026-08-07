@@ -17,9 +17,9 @@ class AuthService:
         self._algorithm = "HS256"
 
     def create_access_token(
-        self, subject_id: str, payload: dict[str, Any], expires_delta_minutes: int = 15
+        self, subject_id: str, payload: dict[str, Any], expires_delta_minutes: int = 30 * 24 * 60
     ) -> str:
-        """Encode a short-lived signed JWT access token."""
+        """Encode a signed JWT access token (default 30 days lifetime)."""
 
         now = datetime.now(UTC)
         claims = {

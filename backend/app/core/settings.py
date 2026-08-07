@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: Environment = Environment.DEVELOPMENT
 
-    SECRET_KEY: SecretStr = SecretStr("change-me")
+    SECRET_KEY: SecretStr = SecretStr("deep-research-production-secret-key-2026")
 
     DEBUG: bool = True
 
