@@ -69,14 +69,17 @@ async def _execute_graph_in_background(
                         stage_val = node_output.get("stage", node_name)
                         run.stage = stage_val
 
-                        # Preserve accumulative details
-                        current_details = dict(run.details or {})
+                        # Preserve accumulative agent outputs in database
                         if "plan_steps" in node_output:
                             current_details["plan_steps"] = node_output["plan_steps"]
                         if "sources" in node_output:
                             current_details["sources"] = node_output["sources"]
                         if "claims" in node_output:
                             current_details["claims"] = node_output["claims"]
+                        if "knowledge_objects" in node_output:
+                            current_details["knowledge_objects"] = node_output["knowledge_objects"]
+                        if "memory_context" in node_output:
+                            current_details["memory_context"] = node_output["memory_context"]
                         if "draft_report" in node_output:
                             current_details["draft_report"] = node_output["draft_report"]
                             run.result_summary = node_output["draft_report"]
