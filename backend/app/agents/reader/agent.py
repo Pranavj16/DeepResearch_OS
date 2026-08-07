@@ -63,9 +63,10 @@ class ReaderAgent:
             return [f"Factual verification requirement established for objective: {objective}"]
 
         if self._llm_router:
-            system_prompt = (
-                "You are an expert Factual Extractor AI. Analyze the provided web sources and research objective. "
-                "Extract 3-5 distinct, verified factual claims, metrics, and evidence statements with clear source attributions."
+            from app.agents.shared.pipeline_context import build_pipeline_system_prompt
+            system_prompt = build_pipeline_system_prompt(
+                agent_key="extract",
+                custom_instructions="Analyze the crawled web/paper sources in the database. Extract 3-5 distinct, verified factual claims, metrics, and evidence statements with source attributions."
             )
             sources_text = "\n\n".join(
                 f"Source Title: {s.get('title', 'Web Page')}\nURL: {s.get('url', '')}\nContent: {s.get('content', '')[:1200]}"

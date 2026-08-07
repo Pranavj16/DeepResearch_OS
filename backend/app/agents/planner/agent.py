@@ -38,9 +38,10 @@ class PlannerAgent:
             elif available:
                 provider = available[0]
 
-        system_prompt = (
-            "You are an expert Research Planner AI. Break down the research question "
-            "into logical, actionable steps with clear rationales."
+        from app.agents.shared.pipeline_context import build_pipeline_system_prompt
+        system_prompt = build_pipeline_system_prompt(
+            agent_key="plan",
+            custom_instructions="Break down the research question into logical, actionable steps with clear rationales."
         )
         user_prompt = (
             f"Research Question: {request.research_question}\nConstraints: {request.constraints}"

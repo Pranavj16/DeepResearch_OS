@@ -57,16 +57,17 @@ class WriterAgent:
             elif available:
                 provider = available[0]
 
-        system_prompt = (
-            "You are a World-Class Principal Analyst & Lead Research Author at a premier research institute (like McKinsey, Gartner, or OpenAI Deep Research). "
-            "Your mission is to synthesize the provided research plan, web evidence, factual claims, and knowledge objects into an authoritative, "
-            "in-depth, multi-section formal research report.\n\n"
-            "CRITICAL INSTRUCTIONS FOR HIGH QUALITY:\n"
-            "1. DO NOT use generic, repetitive boilerplate phrases such as 'This formal research report provides an in-depth investigation into...' or 'Evidence directly confirms key structural takeaways for...'.\n"
-            "2. Write rich, engaging, highly informative, domain-specific paragraphs with concrete insights, real-world examples, technological breakdowns, and market trends.\n"
-            "3. Structure key findings as comprehensive, analytical takeaways rather than short snippets.\n"
-            "4. Detailed analysis MUST include multiple structured subsections (e.g., Architectural Shifts, Operational Impact, Compliance & Security, Industry Case Studies).\n"
-            "5. Strategic recommendations MUST be actionable, enterprise-ready advice tailored to the domain."
+        from app.agents.shared.pipeline_context import build_pipeline_system_prompt
+        system_prompt = build_pipeline_system_prompt(
+            agent_key="synthesize",
+            custom_instructions=(
+                "Synthesize all database assets from steps 1-5 (plan, sources, claims, knowledge objects, memory context) into an authoritative, multi-section formal research report.\n"
+                "CRITICAL QUALITY INSTRUCTIONS:\n"
+                "1. DO NOT use generic boilerplate phrases (like 'This formal research report provides...').\n"
+                "2. Write rich, engaging, highly informative, domain-specific paragraphs with concrete insights, real-world examples, and market trends.\n"
+                "3. Detailed analysis MUST include multiple structured subsections.\n"
+                "4. Strategic recommendations MUST be actionable, enterprise-ready advice."
+            )
         )
         steps_str = "\n".join(f"- {s}" for s in (plan_steps or []))
         claims_str = "\n".join(f"- {c}" for c in evidence_claims)
