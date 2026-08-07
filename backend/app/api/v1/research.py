@@ -69,6 +69,9 @@ async def _execute_graph_in_background(
                         stage_val = node_output.get("stage", node_name)
                         run.stage = stage_val
 
+                        # Always initialize current_details from database
+                        current_details = dict(run.details or {})
+
                         # Preserve accumulative agent outputs in database
                         if "plan_steps" in node_output:
                             current_details["plan_steps"] = node_output["plan_steps"]
@@ -86,6 +89,46 @@ async def _execute_graph_in_background(
                         if "critique_score" in node_output:
                             current_details["critique_score"] = node_output["critique_score"]
                             current_details["critique_passed"] = node_output.get("critique_passed", True)
+
+                        # Append real-time agent execution tracking log to DB
+                        agent_logs = list(current_details.get("agent_logs") or [])
+                        agent_name_map = {
+                            "plan": "Planner Agent",
+                            "search": "Searcher Agent",
+                            "extract": "Extractor / Reader Agent",
+                            "knowledge": "Knowledge Agent",
+                            "memory": "Memory Agent",
+                            "synthesize": "Writer Agent",
+                            "review": "Critic Agent",
+                            "reflection": "Reflection Agent",
+                            "finalize": "Finalize Engine",
+                        }
+                        
+                        summary_text = "Stage completed"
+                        if "plan_steps" in node_output:
+                            summary_text = f"Generated {len(node_output['plan_steps'])} research sub-goals"
+                        elif "sources" in node_output:
+                            summary_text = f"Crawled {len(node_output['sources'])} web/paper sources"
+                        elif "claims" in node_output:
+                            summary_text = f"Extracted {len(node_output['claims'])} verified factual claims"
+                        elif "knowledge_objects" in node_output:
+                            summary_text = f"Built {len(node_output['knowledge_objects'])} RAG graph objects"
+                        elif "memory_context" in node_output:
+                            summary_text = "Checkpointed working memory state"
+                        elif "draft_report" in node_output:
+                            summary_text = f"Synthesized research report ({len(node_output['draft_report'])} chars)"
+                        elif "critique_score" in node_output:
+                            summary_text = f"Audited quality score: {node_output['critique_score']}"
+
+                        agent_logs.append({
+                            "step": len(agent_logs) + 1,
+                            "stage": stage_val,
+                            "agent": agent_name_map.get(stage_val, f"{stage_val.capitalize()} Agent"),
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "status": "completed",
+                            "summary": summary_text,
+                        })
+                        current_details["agent_logs"] = agent_logs
 
                         run.details = current_details
                         await session.commit()
