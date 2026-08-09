@@ -16,16 +16,53 @@ if not raw_backend_url or raw_backend_url in ["http://127.0.0.1:8000", "http://l
         raw_backend_url = "http://127.0.0.1:8000"
 
 if not raw_backend_url.startswith(("http://", "https://")):
-    if raw_backend_url.startswith(("localhost", "127.0.0.1")):
+    if "." not in raw_backend_url and ":" not in raw_backend_url:
+        raw_backend_url = f"http://{raw_backend_url}:10000"
+    elif raw_backend_url.startswith(("localhost", "127.0.0.1")):
         raw_backend_url = f"http://{raw_backend_url}"
     else:
         raw_backend_url = f"https://{raw_backend_url}"
 
-scheme, _, host = raw_backend_url.partition("://")
-if "." not in host and ":" not in host and "localhost" not in host and "127.0.0.1" not in host and "research-backend" not in host:
-    raw_backend_url = f"{scheme}://{host}.onrender.com"
-
 BACKEND_API_URL = f"{raw_backend_url}/api/v1"
+
+
+def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
+    """Make HTTP request to backend with automatic Render internal/external fallback resolution."""
+    timeout_val = kwargs.pop("timeout", 10.0)
+    urls_to_try: list[str] = []
+
+    # Primary constructed URL
+    urls_to_try.append(f"{BACKEND_API_URL}{endpoint}")
+
+    # Extract host from BACKEND_URL env var if set
+    raw_env_host = os.environ.get("BACKEND_URL", "").strip().rstrip("/").replace("http://", "").replace("https://", "").partition("/")[0]
+    if raw_env_host:
+        clean = raw_env_host.partition(":")[0]
+        if clean:
+            urls_to_try.append(f"http://{clean}:10000/api/v1{endpoint}")
+            urls_to_try.append(f"https://{clean}.onrender.com/api/v1{endpoint}")
+
+    # Common Render service aliases
+    urls_to_try.append(f"http://research-backend-krjc:10000/api/v1{endpoint}")
+    urls_to_try.append(f"https://research-backend-krjc.onrender.com/api/v1{endpoint}")
+    urls_to_try.append(f"http://research-backend:10000/api/v1{endpoint}")
+    urls_to_try.append(f"https://research-backend.onrender.com/api/v1{endpoint}")
+    urls_to_try.append(f"http://127.0.0.1:8000/api/v1{endpoint}")
+
+    unique_urls: list[str] = []
+    for u in urls_to_try:
+        if u not in unique_urls:
+            unique_urls.append(u)
+
+    last_error: Exception | None = None
+    for url in unique_urls:
+        try:
+            res = requests.request(method, url, timeout=timeout_val, **kwargs)
+            return res
+        except Exception as err:
+            last_error = err
+
+    raise last_error or Exception("Failed to connect to backend service")
 
 
 try:
@@ -71,13 +108,13 @@ def index_view(request: HttpRequest) -> HttpResponse:
     recent_runs: list[dict[str, Any]] = []
     user_email = request.COOKIES.get("user_email", "")
     try:
-        res = requests.get(f"{BACKEND_API_URL}/health", timeout=5.0)
+        res = make_backend_request("GET", "/health", timeout=5.0)
         health = res.json() if res.status_code == 200 else {}
     except Exception:
         health = {"status": "degraded"}
 
     try:
-        runs_res = requests.get(f"{BACKEND_API_URL}/research/history", params={"user_email": user_email}, timeout=5.0)
+        runs_res = make_backend_request("GET", "/research/history", params={"user_email": user_email}, timeout=5.0)
         if runs_res.status_code == 200:
             for item in runs_res.json():
                 item["run_id"] = str(item.get("id"))
@@ -117,43 +154,30 @@ def create_run_view(request: HttpRequest) -> HttpResponse:
         user_email = request.COOKIES.get("user_email", "user@research.ai")
 
         try:
-            res = requests.post(
-                f"{BACKEND_API_URL}/research/runs",
-                json={"title": title, "objective": objective, "user_email": user_email},
-                timeout=45.0,
+            res = make_backend_request(
+                "POST",
+                "/research/runs",
+                json={
+                    "title": title,
+                    "objective": objective,
+                    "user_email": user_email,
+                },
+                timeout=10.0,
             )
-            run_data = res.json()
-            run_id = str(run_data.get("id", "active-run"))
-            response = HttpResponse(
-                f"<script>window.location.href='/research/live/{run_id}';</script>"
-            )
-            response["HX-Redirect"] = f"/research/live/{run_id}"
-            return response
-        except Exception as err:
-            return HttpResponse(
-                f"<div class='p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700'>"
-                f"Error launching research: {err}</div>"
-            )
+            if res.status_code in [200, 201]:
+                data = res.json()
+                run_id = data.get("id")
+                response = HttpResponse(status=204)
+                response["HX-Redirect"] = f"/research/live/{run_id}"
+                return response
+        except Exception:
+            pass
 
-    return render(request, "research/index.html")
+    return redirect("index")
 
 
 @require_auth
 def live_execution_view(request: HttpRequest, run_id: str) -> HttpResponse:
-    """Render flagship real-time multi-agent execution screen."""
-
-    user_email = request.COOKIES.get("user_email", "")
-    try:
-        res = requests.get(f"{BACKEND_API_URL}/research/runs/{run_id}", params={"user_email": user_email}, timeout=5.0)
-        run_data = res.json()
-        run_data["run_id"] = str(run_data.get("id", run_id))
-    except Exception:
-        run_data = {
-            "run_id": run_id,
-            "title": "Autonomous Multi-Agent Research Task",
-            "objective": "Executing LangGraph multi-agent research graph",
-            "stage": "plan",
-            "status": "running",
         }
 
     return render(
