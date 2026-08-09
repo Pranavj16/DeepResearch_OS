@@ -8,29 +8,37 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 import os
 
-# Guaranteed live backend API URL on Render
-LIVE_PRODUCTION_BACKEND_API = "https://research-backend-krjc.onrender.com/api/v1"
+def get_backend_api_url() -> str:
+    """Dynamically resolve clean backend API endpoint."""
+    raw_env = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
+    if raw_env and raw_env not in ["http://127.0.0.1:8000", "http://localhost:8000"]:
+        if not raw_env.startswith(("http://", "https://")):
+            if "." in raw_env or ":" in raw_env:
+                raw_env = f"https://{raw_env}"
+            else:
+                raw_env = f"https://{raw_env}.onrender.com"
 
-raw_env_backend = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
-if raw_env_backend and not raw_env_backend.startswith(("http://", "https://")):
-    if "." in raw_env_backend:
-        raw_env_backend = f"https://{raw_env_backend}"
-    else:
-        raw_env_backend = f"https://{raw_env_backend}.onrender.com"
+        if not raw_env.endswith("/api/v1"):
+            raw_env = f"{raw_env}/api/v1"
+        return raw_env
 
-if raw_env_backend and "onrender.com" in raw_env_backend:
-    BACKEND_API_URL = f"{raw_env_backend}/api/v1" if not raw_env_backend.endswith("/api/v1") else raw_env_backend
-else:
-    BACKEND_API_URL = LIVE_PRODUCTION_BACKEND_API
+    if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
+        return "https://research-backend-krjc.onrender.com/api/v1"
+
+    return "http://127.0.0.1:8000/api/v1"
+
+
+BACKEND_API_URL = get_backend_api_url()
 
 
 def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
-    """Make HTTP request to backend with zero-fail fallback to live production URL."""
+    """Make HTTP request to backend with dynamic URL resolution and fallback support."""
     timeout_val = kwargs.pop("timeout", 15.0)
 
+    target_api = get_backend_api_url()
     urls_to_try = [
-        f"{LIVE_PRODUCTION_BACKEND_API}{endpoint}",
-        f"{BACKEND_API_URL}{endpoint}",
+        f"{target_api}{endpoint}",
+        f"https://research-backend-krjc.onrender.com/api/v1{endpoint}",
     ]
 
     unique_urls: list[str] = []
