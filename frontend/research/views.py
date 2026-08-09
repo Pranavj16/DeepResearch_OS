@@ -169,7 +169,17 @@ def create_run_view(request: HttpRequest) -> HttpResponse:
 
 @require_auth
 def live_execution_view(request: HttpRequest, run_id: str) -> HttpResponse:
-        }
+    """Render live telemetry dashboard for an active research run."""
+
+    run_data = {"id": run_id, "title": "Autonomous Research", "status": "running", "stage": "intake"}
+    user_email = request.COOKIES.get("user_email", "")
+    try:
+        res = make_backend_request("GET", f"/research/runs/{run_id}", params={"user_email": user_email}, timeout=5.0)
+        if res.status_code == 200:
+            run_data = res.json()
+            run_data["run_id"] = str(run_data.get("id"))
+    except Exception:
+        pass
 
     return render(
         request,
