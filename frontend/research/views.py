@@ -11,43 +11,35 @@ import os
 raw_backend_url = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
 if not raw_backend_url or raw_backend_url in ["http://127.0.0.1:8000", "http://localhost:8000"]:
     if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
-        raw_backend_url = "http://research-backend:10000"
+        raw_backend_url = "https://research-backend-krjc.onrender.com"
     else:
         raw_backend_url = "http://127.0.0.1:8000"
 
-if not raw_backend_url.startswith(("http://", "https://")):
-    if "." not in raw_backend_url and ":" not in raw_backend_url:
-        raw_backend_url = f"http://{raw_backend_url}:10000"
-    elif raw_backend_url.startswith(("localhost", "127.0.0.1")):
-        raw_backend_url = f"http://{raw_backend_url}"
-    else:
+if raw_backend_url:
+    if not raw_backend_url.startswith(("http://", "https://")):
         raw_backend_url = f"https://{raw_backend_url}"
+
+    scheme, _, host = raw_backend_url.partition("://")
+    host_only = host.partition(":")[0]
+    if "." not in host_only and host_only not in ["localhost", "127.0.0.1"]:
+        raw_backend_url = f"{scheme}://{host_only}.onrender.com"
 
 BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
 
 def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
     """Make HTTP request to backend with automatic Render internal/external fallback resolution."""
-    timeout_val = kwargs.pop("timeout", 10.0)
+    timeout_val = kwargs.pop("timeout", 15.0)
     urls_to_try: list[str] = []
 
     # Primary constructed URL
     urls_to_try.append(f"{BACKEND_API_URL}{endpoint}")
 
-    # Extract host from BACKEND_URL env var if set
-    raw_env_host = os.environ.get("BACKEND_URL", "").strip().rstrip("/").replace("http://", "").replace("https://", "").partition("/")[0]
-    if raw_env_host:
-        clean = raw_env_host.partition(":")[0]
-        if clean:
-            urls_to_try.append(f"http://{clean}:10000/api/v1{endpoint}")
-            urls_to_try.append(f"https://{clean}.onrender.com/api/v1{endpoint}")
-
-    # Common Render service aliases
-    urls_to_try.append(f"http://research-backend-krjc:10000/api/v1{endpoint}")
+    # Explicit guaranteed live backend URL
     urls_to_try.append(f"https://research-backend-krjc.onrender.com/api/v1{endpoint}")
+    urls_to_try.append(f"http://research-backend-krjc:10000/api/v1{endpoint}")
     urls_to_try.append(f"http://research-backend:10000/api/v1{endpoint}")
     urls_to_try.append(f"https://research-backend.onrender.com/api/v1{endpoint}")
-    urls_to_try.append(f"http://127.0.0.1:8000/api/v1{endpoint}")
 
     unique_urls: list[str] = []
     for u in urls_to_try:
