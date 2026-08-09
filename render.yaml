@@ -62,6 +62,6 @@ services:
         fromService:
           type: web
           name: research-backend
-          property: url
+          property: host
       - key: SECRET_KEY
         generateValue: true
