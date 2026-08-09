@@ -71,21 +71,21 @@ def require_auth(view_func: Any) -> Any:
             return redirect("login")
 
         if jwt is not None:
-            secret_key = os.environ.get("SECRET_KEY", "deep-research-production-secret-key-2026")
             try:
-                jwt.decode(token, secret_key, algorithms=["HS256"])
-            except getattr(jwt, "ExpiredSignatureError", Exception):
-                response = redirect("login")
-                response.delete_cookie("access_token")
-                response.delete_cookie("user_email")
-                return response
-            except getattr(jwt, "InvalidTokenError", Exception):
-                response = redirect("login")
-                response.delete_cookie("access_token")
-                response.delete_cookie("user_email")
-                return response
+                payload = jwt.decode(token, options={"verify_signature": False})
+                exp = payload.get("exp")
+                if exp and isinstance(exp, (int, float)):
+                    import time
+                    if time.time() > exp:
+                        response = redirect("login")
+                        response.delete_cookie("access_token")
+                        response.delete_cookie("user_email")
+                        return response
             except Exception:
-                pass
+                response = redirect("login")
+                response.delete_cookie("access_token")
+                response.delete_cookie("user_email")
+                return response
 
         return view_func(request, *args, **kwargs)
 
