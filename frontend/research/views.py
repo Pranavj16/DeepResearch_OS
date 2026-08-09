@@ -8,42 +8,29 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 import os
 
-def normalize_backend_url(raw_url: str) -> str:
-    """Normalize any raw backend URL into a valid, reachable target URL."""
-    url = raw_url.strip().rstrip("/")
-    if not url or url in ["http://127.0.0.1:8000", "http://localhost:8000"]:
-        if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
-            return "https://research-backend-krjc.onrender.com/api/v1"
-        return "http://127.0.0.1:8000/api/v1"
+# Guaranteed live backend API URL on Render
+LIVE_PRODUCTION_BACKEND_API = "https://research-backend-krjc.onrender.com/api/v1"
 
-    if not url.startswith(("http://", "https://")):
-        url = f"https://{url}"
+raw_env_backend = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
+if raw_env_backend and not raw_env_backend.startswith(("http://", "https://")):
+    if "." in raw_env_backend:
+        raw_env_backend = f"https://{raw_env_backend}"
+    else:
+        raw_env_backend = f"https://{raw_env_backend}.onrender.com"
 
-    scheme, _, host = url.partition("://")
-    host_only = host.partition(":")[0]
-
-    if "." not in host_only and host_only not in ["localhost", "127.0.0.1"]:
-        url = f"{scheme}://{host_only}.onrender.com"
-
-    if not url.endswith("/api/v1"):
-        url = f"{url}/api/v1"
-
-    return url
-
-
-BACKEND_API_URL = normalize_backend_url(os.environ.get("BACKEND_URL", ""))
+if raw_env_backend and "onrender.com" in raw_env_backend:
+    BACKEND_API_URL = f"{raw_env_backend}/api/v1" if not raw_env_backend.endswith("/api/v1") else raw_env_backend
+else:
+    BACKEND_API_URL = LIVE_PRODUCTION_BACKEND_API
 
 
 def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
-    """Make HTTP request to backend with clean URL normalization and fallback resolution."""
+    """Make HTTP request to backend with zero-fail fallback to live production URL."""
     timeout_val = kwargs.pop("timeout", 15.0)
 
-    raw_env = os.environ.get("BACKEND_URL", "").strip()
-    primary_url = normalize_backend_url(raw_env)
-
     urls_to_try = [
-        f"{primary_url}{endpoint}",
-        f"https://research-backend-krjc.onrender.com/api/v1{endpoint}",
+        f"{LIVE_PRODUCTION_BACKEND_API}{endpoint}",
+        f"{BACKEND_API_URL}{endpoint}",
     ]
 
     unique_urls: list[str] = []
@@ -54,8 +41,7 @@ def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Respo
     last_err: Exception | None = None
     for url in unique_urls:
         try:
-            res = requests.request(method, url, timeout=timeout_val, **kwargs)
-            return res
+            return requests.request(method, url, timeout=timeout_val, **kwargs)
         except Exception as err:
             last_err = err
 
