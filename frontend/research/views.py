@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 import os
 
 raw_backend_url = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
-if not raw_backend_url or raw_backend_url in ["http://127.0.0.1:8000", "http://localhost:8000"]:
+if not raw_backend_url or "localhost" in raw_backend_url or "127.0.0.1" in raw_backend_url:
     if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
         raw_backend_url = "https://research-backend-krjc.onrender.com"
     else:
@@ -28,33 +28,30 @@ BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
 
 def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
-    """Make HTTP request to backend with automatic Render internal/external fallback resolution."""
+    """Make HTTP request to backend with explicit live production fallback resolution."""
     timeout_val = kwargs.pop("timeout", 15.0)
-    urls_to_try: list[str] = []
 
-    # Primary constructed URL
-    urls_to_try.append(f"{BACKEND_API_URL}{endpoint}")
-
-    # Explicit guaranteed live backend URL
-    urls_to_try.append(f"https://research-backend-krjc.onrender.com/api/v1{endpoint}")
-    urls_to_try.append(f"http://research-backend-krjc:10000/api/v1{endpoint}")
-    urls_to_try.append(f"http://research-backend:10000/api/v1{endpoint}")
-    urls_to_try.append(f"https://research-backend.onrender.com/api/v1{endpoint}")
+    urls_to_try = [
+        "https://research-backend-krjc.onrender.com/api/v1" + endpoint,
+        f"{BACKEND_API_URL}{endpoint}",
+        "http://research-backend-krjc:10000/api/v1" + endpoint,
+        "http://research-backend:10000/api/v1" + endpoint,
+    ]
 
     unique_urls: list[str] = []
     for u in urls_to_try:
         if u not in unique_urls:
             unique_urls.append(u)
 
-    last_error: Exception | None = None
+    last_err: Exception | None = None
     for url in unique_urls:
         try:
             res = requests.request(method, url, timeout=timeout_val, **kwargs)
             return res
         except Exception as err:
-            last_error = err
+            last_err = err
 
-    raise last_error or Exception("Failed to connect to backend service")
+    raise last_err or Exception("Failed to connect to backend service")
 
 
 try:
