@@ -8,17 +8,22 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 import os
 
-raw_backend_url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
-if raw_backend_url:
-    if not raw_backend_url.startswith(("http://", "https://")):
-        if raw_backend_url.startswith(("localhost", "127.0.0.1")):
-            raw_backend_url = f"http://{raw_backend_url}"
-        else:
-            raw_backend_url = f"https://{raw_backend_url}"
-    
-    scheme, _, host = raw_backend_url.partition("://")
-    if "." not in host and ":" not in host and "localhost" not in host and "127.0.0.1" not in host:
-        raw_backend_url = f"{scheme}://{host}.onrender.com"
+raw_backend_url = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
+if not raw_backend_url or raw_backend_url in ["http://127.0.0.1:8000", "http://localhost:8000"]:
+    if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
+        raw_backend_url = "http://research-backend:10000"
+    else:
+        raw_backend_url = "http://127.0.0.1:8000"
+
+if not raw_backend_url.startswith(("http://", "https://")):
+    if raw_backend_url.startswith(("localhost", "127.0.0.1")):
+        raw_backend_url = f"http://{raw_backend_url}"
+    else:
+        raw_backend_url = f"https://{raw_backend_url}"
+
+scheme, _, host = raw_backend_url.partition("://")
+if "." not in host and ":" not in host and "localhost" not in host and "127.0.0.1" not in host and "research-backend" not in host:
+    raw_backend_url = f"{scheme}://{host}.onrender.com"
 
 BACKEND_API_URL = f"{raw_backend_url}/api/v1"
 
