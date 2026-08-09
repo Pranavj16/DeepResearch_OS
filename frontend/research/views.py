@@ -362,20 +362,26 @@ def login_view(request: HttpRequest) -> HttpResponse:
             res = requests.post(
                 f"{BACKEND_API_URL}/auth/login",
                 json={"email": email, "password": password},
-                timeout=10.0,
+                timeout=15.0,
             )
             if res.status_code == 200:
-                data = res.json()
+                try:
+                    data = res.json()
+                except Exception:
+                    data = {}
                 response = redirect("index")
                 cookie_max_age = 30 * 24 * 60 * 60  # 30 days persistence
                 response.set_cookie("access_token", data.get("access_token", ""), max_age=cookie_max_age, samesite="Lax")
                 response.set_cookie("user_email", email, max_age=cookie_max_age, samesite="Lax")
                 return response
             else:
-                detail = res.json().get("detail", "Invalid email or password.")
+                try:
+                    detail = res.json().get("detail", f"Authentication failed (HTTP {res.status_code}).")
+                except Exception:
+                    detail = f"Backend returned HTTP status {res.status_code}."
                 return render(request, "research/auth/login.html", {"error": detail})
         except Exception as err:
-            return render(request, "research/auth/login.html", {"error": f"Connection error: {err}"})
+            return render(request, "research/auth/login.html", {"error": f"Backend connection failed. Please verify BACKEND_URL environment variable on Render ({err})."})
 
     return render(request, "research/auth/login.html")
 
@@ -393,20 +399,26 @@ def signup_view(request: HttpRequest) -> HttpResponse:
             res = requests.post(
                 f"{BACKEND_API_URL}/auth/register",
                 json={"email": email, "password": password, "org_name": org_name},
-                timeout=10.0,
+                timeout=15.0,
             )
             if res.status_code == 200:
-                data = res.json()
+                try:
+                    data = res.json()
+                except Exception:
+                    data = {}
                 response = redirect("index")
                 cookie_max_age = 30 * 24 * 60 * 60  # 30 days persistence
                 response.set_cookie("access_token", data.get("access_token", ""), max_age=cookie_max_age, samesite="Lax")
                 response.set_cookie("user_email", email, max_age=cookie_max_age, samesite="Lax")
                 return response
             else:
-                detail = res.json().get("detail", "Registration failed.")
+                try:
+                    detail = res.json().get("detail", f"Registration failed (HTTP {res.status_code}).")
+                except Exception:
+                    detail = f"Backend returned HTTP status {res.status_code}."
                 return render(request, "research/auth/signup.html", {"error": detail})
         except Exception as err:
-            return render(request, "research/auth/signup.html", {"error": f"Connection error: {err}"})
+            return render(request, "research/auth/signup.html", {"error": f"Backend connection failed. Please verify BACKEND_URL environment variable on Render ({err})."})
 
     return render(request, "research/auth/signup.html")
 
