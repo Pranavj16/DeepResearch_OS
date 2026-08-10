@@ -22,6 +22,15 @@ async def stream_run_events(run_id: str) -> StreamingResponse:
     async def event_generator() -> AsyncGenerator[str, None]:
         clean_id = run_id.replace("-", "").lower()
         engine = create_engine_from_url()
+
+        try:
+            async with engine.begin() as conn:
+                from app.db.postgres import Base
+                import app.db.models  # noqa: F401
+                await conn.run_sync(Base.metadata.create_all)
+        except Exception:
+            pass
+
         session_factory = create_session_factory(engine)
 
         last_stage = None
@@ -29,15 +38,18 @@ async def stream_run_events(run_id: str) -> StreamingResponse:
         max_checks = 600  # Max 10 minutes streaming timeout
 
         for _ in range(max_checks):
-            async with session_factory() as session:
-                stmt = select(ResearchRunModel)
-                res = await session.execute(stmt)
-                all_runs = res.scalars().all()
+            run = None
+            try:
+                async with session_factory() as session:
+                    stmt = select(ResearchRunModel)
+                    res = await session.execute(stmt)
+                    all_runs = res.scalars().all()
+                    for r in all_runs:
+                        if str(r.id).replace("-", "").lower() == clean_id:
+                            run = r
+                            break
+            except Exception:
                 run = None
-                for r in all_runs:
-                    if str(r.id).replace("-", "").lower() == clean_id:
-                        run = r
-                        break
 
                 if run:
                     current_stage = run.stage or "intake"
