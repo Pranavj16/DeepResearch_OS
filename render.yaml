@@ -48,7 +48,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
 
-  # 2. Django Frontend Web App (100% FREE TIER)
+  # 2. Frontend Web App (100% FREE TIER)
   - type: web
     name: research-frontend
     env: python

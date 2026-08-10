@@ -1,6 +1,6 @@
 # ⚡ DeepResearch OS: Production-Grade Autonomous Multi-Agent AI Research Platform
 
-DeepResearch OS is an enterprise-grade autonomous research platform powered by **LangGraph StateGraph v2.0**, **FastAPI**, **Django**, and **8 Specialized AI Agents** operating in real-time streaming execution envelopes. 
+DeepResearch OS is an enterprise-grade autonomous research platform powered by **LangGraph StateGraph v2.0**, **FastAPI**, **Progressive HTML5/HTMX Web UI**, and **8 Specialized AI Agents** operating in real-time streaming execution envelopes. 
 
 Designed with a high-contrast **Notion & OpenAI Minimalist Dark Theme**, it converts high-level research questions into verified factual reports with citations, vector store index grounding, and human-in-the-loop governance.
 
@@ -10,7 +10,7 @@ Designed with a high-contrast **Notion & OpenAI Minimalist Dark Theme**, it conv
 
 ```mermaid
 graph TD
-    subgraph Client Layer ["Client & Presentation Layer (Django 5 + HTMX)"]
+    subgraph Client Layer ["Client & Presentation Layer (HTML5 + HTMX + SSE)"]
         UI["Notion/OpenAI Dark Theme UI"]
         HTMX["HTMX Real-Time Partial Swaps"]
         SSE_Client["EventSource SSE Streaming Listener"]
@@ -110,7 +110,7 @@ sequenceDiagram
 - **Persistent Chat & History Management**: Direct unhyphenated SQLite UUID deletion with zero browser pop-up prompts for instant removal.
 - **Knowledge & RAG Index Explorer**: Inspect ingested documents, vector chunk embeddings, extracted claims, and domain citations.
 - **Multi-Tenant Workspaces & RBAC**: Tenant boundaries, Role-Based Access Control (`Owner`, `Researcher`, `Viewer`), and resource token quotas.
-- **Robust Testing**: 100% test coverage with **15 Django frontend unit tests** and **36 FastAPI pytest tests**.
+- **Robust Testing**: Comprehensive test coverage across frontend UI views and **36 FastAPI pytest tests**.
 
 ---
 
@@ -134,12 +134,11 @@ cp .env.example .env # Add your GEMINI_API_KEY, TAVILY_API_KEY
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 3. Frontend Setup (Django UI)
+### 3. Frontend Setup (Web UI Server)
 ```bash
 cd ../frontend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 3000
+npm install
+npm run dev
 ```
 
 Open `http://localhost:3000` in your browser.
