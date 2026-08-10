@@ -161,20 +161,20 @@ class LLMRouter:
                 is_finance = any(w in obj.lower() for w in ["finance", "banking", "financial", "market", "economy", "trader", "stock"])
 
                 if is_finance:
-                    title_text = f"The AI Revolution in Financial Services: Structural Transformation, Autonomous Operations, and Market Dynamics"
+                    title_text = "The AI Revolution in Financial Services: Structural Transformation, Autonomous Operations, and Market Dynamics"
                     summary_text = (
-                        f"The artificial intelligence revolution is fundamentally restructuring global financial services, transforming "
-                        f"traditional banking, asset management, risk underwriting, and capital markets. By deploying multi-agent autonomous systems, "
-                        f"predictive neural networks, and real-time LLM inference, financial institutions are achieving unprecedented operational velocity, "
-                        f"sub-millisecond fraud detection, and hyper-personalized wealth management. This deep research report analyzes the key structural changes, "
-                        f"architectural paradigms, market budget reallocations, and emerging regulatory requirements across the sector."
+                        "The artificial intelligence revolution is fundamentally restructuring global financial services, transforming "
+                        "traditional banking, asset management, risk underwriting, and capital markets. By deploying multi-agent autonomous systems, "
+                        "predictive neural networks, and real-time LLM inference, financial institutions are achieving unprecedented operational velocity, "
+                        "sub-millisecond fraud detection, and hyper-personalized wealth management. This deep research report analyzes the key structural changes, "
+                        "architectural paradigms, market budget reallocations, and emerging regulatory requirements across the sector."
                     )
                     bg_text = (
-                        f"Historically, financial institutions operated on legacy mainframe infrastructure characterized by manual batch processing, "
-                        f"rule-based risk heuristics, and latency-heavy underwriting pipelines. Over the past decade, the rapid maturation of generative AI, "
-                        f"retrieval-augmented generation (RAG), and high-frequency quantitative models has disrupted every vertical in financial services. "
-                        f"Leading global institutions like JPMorgan, EY, and MIT research cohorts confirm that IT capital expenditures are aggressively "
-                        f"shifting from legacy system maintenance toward autonomous AI agents, cloud vector search, and model auditing."
+                        "Historically, financial institutions operated on legacy mainframe infrastructure characterized by manual batch processing, "
+                        "rule-based risk heuristics, and latency-heavy underwriting pipelines. Over the past decade, the rapid maturation of generative AI, "
+                        "retrieval-augmented generation (RAG), and high-frequency quantitative models has disrupted every vertical in financial services. "
+                        "Leading global institutions like JPMorgan, EY, and MIT research cohorts confirm that IT capital expenditures are aggressively "
+                        "shifting from legacy system maintenance toward autonomous AI agents, cloud vector search, and model auditing."
                     )
                     findings = [
                         "Algorithmic Trading & High-Frequency Market Sentiment: Machine learning models ingest microsecond order-book feeds and alternative web sentiment to execute autonomous algorithmic strategies with minimal market impact.",
@@ -184,16 +184,16 @@ class LLMRouter:
                         "Workforce Transformation & Emerging Roles: Banking roles are evolving from routine data entry to quantitative model validation, AI prompt engineering, compliance oversight, and ethical AI governance."
                     ]
                     analysis_text = (
-                        f"### 1. Architectural & Technological Paradigms\n"
-                        f"Modern AI-driven financial platforms rely on a hybrid stack combining low-latency inference engines with enterprise RAG pipelines. "
-                        f"Key structural layers include:\n\n"
-                        f"- **Vector Indexing & Compliance Retrieval**: Financial regulations (KYC, AML, Dodd-Frank) are embedded into RAG stores, allowing agents to audit transactions in real time.\n"
-                        f"- **Multi-Agent Orchestration**: Specialized agents (Planner, Extractor, Writer, Auditor) collaborate across graph state machines to execute complex credit decisions.\n"
-                        f"- **Sub-Millisecond Telemetry**: Real-time message buses process millions of stock ticks and payment events per second.\n\n"
-                        f"### 2. Operational Impact & Market Reallocation\n"
-                        f"According to research from EY and the Alan Turing Institute, major tier-1 banks are reallocating up to 35% of overall technology budgets "
-                        f"toward embedded AI infrastructure. This transition has dramatically lowered cost-to-serve metrics while expanding access to credit.\n\n"
-                        f"### 3. Verified Evidence Spans & Case Evidence\n"
+                        "### 1. Architectural & Technological Paradigms\n"
+                        "Modern AI-driven financial platforms rely on a hybrid stack combining low-latency inference engines with enterprise RAG pipelines. "
+                        "Key structural layers include:\n\n"
+                        "- **Vector Indexing & Compliance Retrieval**: Financial regulations (KYC, AML, Dodd-Frank) are embedded into RAG stores, allowing agents to audit transactions in real time.\n"
+                        "- **Multi-Agent Orchestration**: Specialized agents (Planner, Extractor, Writer, Auditor) collaborate across graph state machines to execute complex credit decisions.\n"
+                        "- **Sub-Millisecond Telemetry**: Real-time message buses process millions of stock ticks and payment events per second.\n\n"
+                        "### 2. Operational Impact & Market Reallocation\n"
+                        "According to research from EY and the Alan Turing Institute, major tier-1 banks are reallocating up to 35% of overall technology budgets "
+                        "toward embedded AI infrastructure. This transition has dramatically lowered cost-to-serve metrics while expanding access to credit.\n\n"
+                        "### 3. Verified Evidence Spans & Case Evidence\n"
                         + "\n".join(f"- {c}" for c in (claims_found[:5] or ["Financial institutions are deploying AI to automate risk assessment and optimize capital allocation."]))
                     )
                     recommendations = [
@@ -216,8 +216,8 @@ class LLMRouter:
                     )
                     findings = [
                         f"Primary Domain Driver: Structural evidence confirms significant growth and technological integration regarding '{obj}'.",
-                        f"Multi-Source Evidence Verification: Cross-referenced data across academic paper repositories and verified industry feeds.",
-                        f"Operational Efficiency Gains: Modern automated workflows reduce manual overhead while increasing analytical precision."
+                        "Multi-Source Evidence Verification: Cross-referenced data across academic paper repositories and verified industry feeds.",
+                        "Operational Efficiency Gains: Modern automated workflows reduce manual overhead while increasing analytical precision."
                     ]
                     if claims_found:
                         findings.extend([f"Extracted Evidence: {c}" for c in claims_found[:3]])

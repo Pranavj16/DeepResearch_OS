@@ -1,5 +1,6 @@
 """Research run command and query API resource endpoints."""
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -26,8 +27,6 @@ async def get_session() -> AsyncSession:
     async with session_factory() as session:
         yield session
 
-
-import asyncio
 
 async def _execute_graph_in_background(
     run_id: UUID,

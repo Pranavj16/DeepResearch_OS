@@ -11,13 +11,11 @@ from app.agents.reader.agent import ReaderAgent
 from app.agents.reflection.agent import ReflectionAgent
 from app.agents.search.agent import SearchAgent
 from app.agents.writer.agent import WriterAgent
+from app.core.settings import Settings
 from app.graph.state import ResearchGraphState
 from app.llm.models import LLMProvider
 from app.llm.router import LLMRouter
 from app.schemas.planner import PlannerRequest
-
-
-from app.core.settings import Settings
 from app.tools.duckduckgo import DuckDuckGoSearchClient
 from app.tools.serper import SerperSearchClient
 from app.tools.tavily import TavilySearchClient
@@ -64,7 +62,6 @@ class ResearchGraphNodes:
         """2. Search Agent using Tavily / Google Serper / DuckDuckGo driven by Planner Agent queries and user objective."""
 
         obj = state.get("objective", "Research Objective")
-        plan_steps = state.get("plan_steps", [])
         queries = state.get("queries", [])
         
         search_queries = []

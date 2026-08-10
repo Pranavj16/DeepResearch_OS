@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from app.core.settings import Settings
 from app.schemas.search import SearchResult

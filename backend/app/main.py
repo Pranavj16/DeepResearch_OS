@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.api.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from app.api.router import api_router
 from app.core.container import create_container
+
 # Re-trigger uvicorn auto-reload for /research/history endpoint
 from app.core.logging import setup_logging
 from app.core.settings import settings
+from app.exceptions.base import ApplicationError
 
 
 @asynccontextmanager
@@ -21,8 +24,9 @@ async def lifespan(fastapi_app: FastAPI):
     # Ensure database tables exist and schema is up-to-date
     try:
         from sqlalchemy import text
-        from app.db.postgres import create_engine_from_url, Base
+
         import app.db.models  # noqa: F401
+        from app.db.postgres import Base, create_engine_from_url
         engine = create_engine_from_url(settings.DATABASE_URL)
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -51,10 +55,6 @@ app = FastAPI(
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from app.exceptions.base import ApplicationError
 
 
 @app.exception_handler(ApplicationError)

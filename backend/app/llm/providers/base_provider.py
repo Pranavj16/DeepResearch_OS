@@ -1,9 +1,10 @@
 from abc import abstractmethod
 from time import perf_counter
 
+from loguru import logger
+
 from app.llm.base import BaseLLM
 from app.llm.models import LLMRequest, LLMResponse
-from loguru import logger
 
 
 class BaseProvider(BaseLLM):

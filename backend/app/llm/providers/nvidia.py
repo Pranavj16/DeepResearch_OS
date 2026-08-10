@@ -1,6 +1,7 @@
 """NVIDIA NIM HTTPX REST Provider."""
 
 import httpx
+
 from app.core.settings import settings
 from app.llm.base import BaseLLM
 from app.llm.models import LLMProvider, LLMRequest, LLMResponse, TokenUsage

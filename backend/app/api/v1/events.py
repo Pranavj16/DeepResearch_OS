@@ -3,7 +3,7 @@
 import asyncio
 import json
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 from sqlalchemy import select
@@ -55,7 +55,7 @@ async def stream_run_events(run_id: str) -> StreamingResponse:
                             "run_id": str(run.id),
                             "title": run.title,
                             "objective": run.objective,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                             "payload": {
                                 "sources": details.get("sources", []),
                                 "claims": details.get("claims", []),

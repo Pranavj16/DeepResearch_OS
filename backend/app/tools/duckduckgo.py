@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import urllib.parse
+
 import httpx
 
 from app.schemas.search import SearchResult

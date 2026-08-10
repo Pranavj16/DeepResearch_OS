@@ -4,15 +4,13 @@ import pytest
 from app.application.knowledge.embeddings import MockEmbeddingProvider, cosine_similarity
 from app.application.knowledge.parsers import DocumentProcessor
 from app.infrastructure.storage.file_storage import FileStorageService
+from app.llm.models import ChatMessage, LLMProvider, LLMRequest, MessageRole
 from app.llm.providers import (
     GeminiProvider,
     ProviderRegistry,
 )
 from app.prompts.registry import PromptRegistry
 from app.tools.firecrawl import FirecrawlClient
-
-
-from app.llm.models import ChatMessage, LLMProvider, LLMRequest, MessageRole
 
 
 @pytest.mark.asyncio
