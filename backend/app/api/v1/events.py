@@ -10,7 +10,7 @@ from sqlalchemy import select
 from starlette.responses import StreamingResponse
 
 from app.db.models import ResearchRunModel
-from app.db.postgres import create_engine_from_url, create_session_factory
+from app.db.postgres import Base, create_engine_from_url, create_session_factory
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -25,8 +25,6 @@ async def stream_run_events(run_id: str) -> StreamingResponse:
 
         try:
             async with engine.begin() as conn:
-                from app.db.postgres import Base
-                import app.db.models  # noqa: F401
                 await conn.run_sync(Base.metadata.create_all)
         except Exception:
             pass
