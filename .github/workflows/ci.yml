@@ -53,6 +53,6 @@ jobs:
         working-directory: ./backend
         run: uv run pytest
 
-      - name: Run Django Frontend Tests
+      - name: Run Frontend View Tests
         working-directory: ./frontend
-        run: uv run python manage.py test research
+        run: python manage.py test research
