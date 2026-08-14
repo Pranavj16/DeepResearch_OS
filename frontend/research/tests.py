@@ -1,6 +1,9 @@
-"""Automated Django unit tests verifying frontend view rendering and routing."""
-
+import time
 from django.test import Client, TestCase
+try:
+    import jwt
+except ImportError:
+    jwt = None
 
 
 class FrontendViewsTestCase(TestCase):
@@ -8,7 +11,19 @@ class FrontendViewsTestCase(TestCase):
 
     def setUp(self) -> None:
         self.client = Client()
-        self.client.cookies["access_token"] = "mock_test_token"
+        if jwt is not None:
+            token = jwt.encode(
+                {
+                    "sub": "test.researcher@company.com",
+                    "email": "test.researcher@company.com",
+                    "exp": int(time.time()) + 7200,
+                },
+                "django-insecure-test-key-2026-minimum-32-chars-long",
+                algorithm="HS256",
+            )
+        else:
+            token = "mock_test_token"
+        self.client.cookies["access_token"] = token
         self.client.cookies["user_email"] = "test.researcher@company.com"
 
     def test_dashboard_index_view(self) -> None:
