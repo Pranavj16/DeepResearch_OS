@@ -24,19 +24,27 @@ class Base(DeclarativeBase):
 
 
 def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
-    """Create an AsyncEngine instance configured for production or test databases."""
+    """Create an AsyncEngine instance configured for production (Neon/Postgres) or local SQLite."""
 
     url = database_url or get_settings().DATABASE_URL
     if not url:
-        # Default persistent file-based SQLite database for durable storage
+        # Default persistent file-based SQLite database for durable local storage
         db_dir = Path("storage")
         db_dir.mkdir(parents=True, exist_ok=True)
         url = "sqlite+aiosqlite:///storage/db.sqlite3"
+    elif url.startswith("postgres://"):
+        # Convert legacy postgres:// to postgresql+asyncpg://
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://"):
-        # Convert dialect for asyncpg driver if needed
+        # Convert standard postgresql:// to postgresql+asyncpg://
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
     connect_args: dict[str, Any] = {}
+    engine_kwargs: dict[str, Any] = {
+        "echo": False,
+        "future": True,
+    }
+
     if "sqlite" in url:
         connect_args["check_same_thread"] = False
         # Automatically ensure parent directory exists for file-based SQLite databases
@@ -45,12 +53,20 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
             db_path = Path(db_path_str)
             if db_path.parent and not db_path.parent.exists():
                 os.makedirs(db_path.parent, exist_ok=True)
+    else:
+        # PostgreSQL / Neon configuration
+        # Handle sslmode parameter for asyncpg compatibility if needed
+        if "sslmode=require" in url:
+            url = url.replace("sslmode=require", "ssl=require")
+        
+        # Serverless connection resilience for Neon / Cloud Postgres
+        engine_kwargs["pool_pre_ping"] = True
+        engine_kwargs["pool_recycle"] = 300
 
     return create_async_engine(
         url,
-        echo=False,
-        future=True,
         connect_args=connect_args,
+        **engine_kwargs,
     )
 
 

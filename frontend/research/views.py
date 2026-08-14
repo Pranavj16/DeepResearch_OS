@@ -13,17 +13,16 @@ def get_backend_api_url() -> str:
     raw_env = os.environ.get("BACKEND_URL", "").strip().rstrip("/")
     if raw_env and raw_env not in ["http://127.0.0.1:8000", "http://localhost:8000"]:
         if not raw_env.startswith(("http://", "https://")):
-            if "." in raw_env or ":" in raw_env:
-                raw_env = f"https://{raw_env}"
-            else:
-                raw_env = f"https://{raw_env}.onrender.com"
+            raw_env = f"https://{raw_env}"
 
         if not raw_env.endswith("/api/v1"):
             raw_env = f"{raw_env}/api/v1"
         return raw_env
 
-    if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"):
-        return "https://research-backend-krjc.onrender.com/api/v1"
+    # If running on Vercel as a unified deployment
+    vercel_url = os.environ.get("VERCEL_URL", "").strip()
+    if vercel_url:
+        return f"https://{vercel_url}/api/v1"
 
     return "http://127.0.0.1:8000/api/v1"
 
@@ -32,28 +31,15 @@ BACKEND_API_URL = get_backend_api_url()
 
 
 def make_backend_request(method: str, endpoint: str, **kwargs) -> requests.Response:
-    """Make HTTP request to backend with dynamic URL resolution and fallback support."""
+    """Make HTTP request to backend with dynamic URL resolution."""
     timeout_val = kwargs.pop("timeout", 15.0)
-
     target_api = get_backend_api_url()
-    urls_to_try = [
-        f"{target_api}{endpoint}",
-        f"https://research-backend-krjc.onrender.com/api/v1{endpoint}",
-    ]
+    url = f"{target_api}{endpoint}"
 
-    unique_urls: list[str] = []
-    for u in urls_to_try:
-        if u not in unique_urls:
-            unique_urls.append(u)
-
-    last_err: Exception | None = None
-    for url in unique_urls:
-        try:
-            return requests.request(method, url, timeout=timeout_val, **kwargs)
-        except Exception as err:
-            last_err = err
-
-    raise last_err or Exception("Failed to connect to backend service")
+    try:
+        return requests.request(method, url, timeout=timeout_val, **kwargs)
+    except Exception as err:
+        raise Exception(f"Failed to connect to backend service at {url}: {err}") from err
 
 
 try:

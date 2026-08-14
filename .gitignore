@@ -13,10 +13,11 @@ __pycache__/
 .env.*
 !.env.example
 
-# Markdown files (Exclude all .md files except README.md as requested)
+# Markdown files (Exclude all .md files except README.md and DEPLOYMENT.md)
 *.md
 **/*.md
 !README.md
+!DEPLOYMENT.md
 
 # Runtime data
 *.sqlite3
