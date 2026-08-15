@@ -2,7 +2,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Any, Literal, Union
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +29,19 @@ class Settings(BaseSettings):
         extra="ignore",
         env_prefix="",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def clean_empty_strings(cls, values: Any) -> Any:
+        """Strip empty environment variable strings so field defaults are preserved."""
+        if isinstance(values, dict):
+            cleaned: dict[str, Any] = {}
+            for k, v in values.items():
+                if isinstance(v, str) and v.strip() == "":
+                    continue
+                cleaned[k] = v
+            return cleaned
+        return values
 
     # ==========================================================
     # Application

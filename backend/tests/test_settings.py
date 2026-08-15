@@ -40,3 +40,19 @@ def test_cors_origin_parsing(monkeypatch) -> None:
     monkeypatch.setenv("ALLOWED_ORIGINS", '["https://app.com"]')
     assert "https://app.com" in Settings().ALLOWED_ORIGINS
 
+
+def test_empty_environment_strings_fallback_to_defaults(monkeypatch) -> None:
+    """Empty strings in ENVIRONMENT, DEBUG, LOG_LEVEL should fallback to defaults."""
+
+    monkeypatch.setenv("ENVIRONMENT", "")
+    monkeypatch.setenv("DEBUG", "")
+    monkeypatch.setenv("LOG_LEVEL", "")
+    monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "")
+
+    settings = Settings()
+    assert settings.ENVIRONMENT == Environment.DEVELOPMENT
+    assert settings.DEBUG is True
+    assert settings.LOG_LEVEL == "INFO"
+    assert settings.TAVILY_SEARCH_DEPTH == "basic"
+
+
