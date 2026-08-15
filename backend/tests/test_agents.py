@@ -7,6 +7,8 @@ from app.agents.search.agent import SearchAgent
 from app.agents.writer.agent import WriterAgent
 from app.llm.router import LLMRouter
 from app.schemas.planner import PlannerRequest
+from app.tools.serper import SerperSearchClient
+from pydantic import SecretStr
 
 
 @pytest.mark.asyncio
@@ -25,6 +27,14 @@ async def test_search_agent() -> None:
     results = await agent.search("AI platform")
     assert len(results) >= 1
     assert "https://" in str(results[0].url)
+
+
+@pytest.mark.asyncio
+async def test_serper_search_client() -> None:
+    client = SerperSearchClient(api_key=SecretStr(""))
+    results = await client.search("AI platform")
+    assert results == []
+
 
 
 @pytest.mark.asyncio
