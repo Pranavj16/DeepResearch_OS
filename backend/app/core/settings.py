@@ -1,6 +1,6 @@
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
