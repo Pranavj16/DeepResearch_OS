@@ -2,7 +2,6 @@ fastapi>=0.141.1
 uvicorn>=0.52.0
 sqlalchemy[asyncio]>=2.0.38
 asyncpg>=0.30.0
-alembic>=1.14.1
 pydantic>=2.13.4
 pydantic-settings>=2.14.2
 pyjwt>=2.8.0
