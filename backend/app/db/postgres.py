@@ -29,9 +29,12 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
     url = database_url or get_settings().DATABASE_URL
     if not url:
         # Default persistent file-based SQLite database for durable local storage
-        db_dir = Path("storage")
-        db_dir.mkdir(parents=True, exist_ok=True)
-        url = "sqlite+aiosqlite:///storage/db.sqlite3"
+        try:
+            db_dir = Path("storage")
+            db_dir.mkdir(parents=True, exist_ok=True)
+            url = "sqlite+aiosqlite:///storage/db.sqlite3"
+        except OSError:
+            url = "sqlite+aiosqlite:////tmp/db.sqlite3"
     elif url.startswith("postgres://"):
         # Convert legacy postgres:// to postgresql+asyncpg://
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
@@ -52,7 +55,10 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
             db_path_str = url.split("///")[-1]
             db_path = Path(db_path_str)
             if db_path.parent and not db_path.parent.exists():
-                os.makedirs(db_path.parent, exist_ok=True)
+                try:
+                    os.makedirs(db_path.parent, exist_ok=True)
+                except OSError:
+                    pass
     else:
         # PostgreSQL / Neon configuration
         # Handle sslmode parameter for asyncpg compatibility if needed

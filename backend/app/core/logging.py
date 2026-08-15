@@ -26,19 +26,22 @@ def setup_logging(config: Settings | None = None) -> None:
         serialize=resolved_settings.LOG_SERIALIZE,
     )
 
-    log_path = Path(resolved_settings.LOG_FILE)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    logger.add(
-        log_path,
-        level=resolved_settings.LOG_LEVEL,
-        rotation=resolved_settings.LOG_ROTATION,
-        retention=resolved_settings.LOG_RETENTION,
-        compression="zip",
-        enqueue=True,
-        backtrace=False,
-        diagnose=False,
-        serialize=resolved_settings.LOG_SERIALIZE,
-    )
+    try:
+        log_path = Path(resolved_settings.LOG_FILE)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            log_path,
+            level=resolved_settings.LOG_LEVEL,
+            rotation=resolved_settings.LOG_ROTATION,
+            retention=resolved_settings.LOG_RETENTION,
+            compression="zip",
+            enqueue=True,
+            backtrace=False,
+            diagnose=False,
+            serialize=resolved_settings.LOG_SERIALIZE,
+        )
+    except OSError:
+        pass
 
 
 def get_logger(**context: Any):

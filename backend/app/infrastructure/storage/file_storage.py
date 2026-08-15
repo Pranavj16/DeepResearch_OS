@@ -21,7 +21,14 @@ class FileStorageService:
 
     def __init__(self, storage_dir: str = "./storage") -> None:
         self._root = Path(storage_dir)
-        self._root.mkdir(parents=True, exist_ok=True)
+        try:
+            self._root.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            self._root = Path("/tmp/storage")
+            try:
+                self._root.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
 
     async def save_artifact(
         self, filename: str, content: bytes, media_type: str = "text/markdown"
