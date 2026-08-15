@@ -12,7 +12,11 @@ from app.api.v1.schemas import CreateResearchRunRequest, ResearchRunResponse
 from app.application.workspace.service import WorkspaceService
 from app.core.dependencies import get_llm_router
 from app.db.models import ExecutionEnvelopeModel, PolicySnapshotModel, ResearchRunModel
-from app.db.postgres import create_engine_from_url, create_session_factory
+from app.db.postgres import (
+    create_engine_from_url,
+    create_session_factory,
+    ensure_tables_created,
+)
 from app.graph.workflow import build_research_graph
 from app.llm.router import LLMRouter
 
@@ -20,9 +24,10 @@ router = APIRouter(prefix="/research", tags=["Research"])
 
 
 async def get_session() -> AsyncSession:
-    """FastAPI session dependency using local engine factory."""
+    """FastAPI session dependency using local engine factory with automatic table assurance."""
 
     engine = create_engine_from_url()
+    await ensure_tables_created(engine)
     session_factory = create_session_factory(engine)
     async with session_factory() as session:
         yield session

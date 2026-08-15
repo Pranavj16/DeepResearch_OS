@@ -119,9 +119,34 @@ async def get_db_context(
         await session.close()
 
 
+_tables_initialized = False
+
+
+async def ensure_tables_created(engine: AsyncEngine | None = None) -> None:
+    """Ensure all database domain tables are created if not already present."""
+    global _tables_initialized
+    if _tables_initialized:
+        return
+
+    active_engine = engine or create_engine_from_url()
+    try:
+        async with active_engine.begin() as conn:
+            import app.db.models  # noqa: F401
+            await conn.run_sync(Base.metadata.create_all)
+            try:
+                from sqlalchemy import text
+                await conn.execute(text("ALTER TABLE research_runs ADD COLUMN details JSON;"))
+            except Exception:
+                pass
+        _tables_initialized = True
+    except Exception:
+        pass
+
+
 __all__ = [
     "Base",
     "create_engine_from_url",
     "create_session_factory",
+    "ensure_tables_created",
     "get_db_context",
 ]
