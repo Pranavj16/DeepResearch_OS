@@ -8,22 +8,29 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.22.1",
     "asyncpg>=0.30.0",
     "beautifulsoup4>=4.12.3",
+    "dj-database-url>=2.1.0",
+    "Django>=5.0",
     "fastapi>=0.141.1",
+    "gunicorn>=21.2.0",
     "httpx>=0.28.1",
     "langchain-core>=0.3.0",
     "langgraph>=0.2.0",
     "loguru>=0.7.3",
     "passlib[bcrypt]>=1.7.4",
+    "psycopg2-binary>=2.9.9",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.8.0",
     "python-dotenv>=1.2.2",
     "qdrant-client>=1.13.2",
     "redis>=5.2.1",
+    "requests>=2.31.0",
     "sqlalchemy[asyncio]>=2.0.38",
     "uvicorn>=0.52.0",
+    "whitenoise>=6.6.0",
 ]
 
 [dependency-groups]
