@@ -133,11 +133,6 @@ async def ensure_tables_created(engine: AsyncEngine | None = None) -> None:
         async with active_engine.begin() as conn:
             import app.db.models  # noqa: F401
             await conn.run_sync(Base.metadata.create_all)
-            try:
-                from sqlalchemy import text
-                await conn.execute(text("ALTER TABLE research_runs ADD COLUMN details JSON;"))
-            except Exception:
-                pass
         _tables_initialized = True
     except Exception:
         pass

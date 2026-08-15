@@ -23,17 +23,12 @@ async def lifespan(fastapi_app: FastAPI):
 
     # Ensure database tables exist and schema is up-to-date
     try:
-        from sqlalchemy import text
-
         import app.db.models  # noqa: F401
         from app.db.postgres import Base, create_engine_from_url
+
         engine = create_engine_from_url(settings.DATABASE_URL)
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-            try:
-                await conn.execute(text("ALTER TABLE research_runs ADD COLUMN details JSON;"))
-            except Exception:
-                pass
         await engine.dispose()
     except Exception as err:
         logger.warning(f"Database table initialization warning: {err}")
