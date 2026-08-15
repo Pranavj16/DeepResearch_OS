@@ -162,7 +162,7 @@ class Settings(BaseSettings):
     # CORS
     # ==========================================================
 
-    ALLOWED_ORIGINS: list[str] = Field(
+    ALLOWED_ORIGINS: Any = Field(
         default_factory=lambda: [
             "http://localhost:3000",
             "http://127.0.0.1:3000",
