@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -35,12 +36,6 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
             url = "sqlite+aiosqlite:///storage/db.sqlite3"
         except OSError:
             url = "sqlite+aiosqlite:////tmp/db.sqlite3"
-    elif url.startswith("postgres://"):
-        # Convert legacy postgres:// to postgresql+asyncpg://
-        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-    elif url.startswith("postgresql://"):
-        # Convert standard postgresql:// to postgresql+asyncpg://
-        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
     connect_args: dict[str, Any] = {}
     engine_kwargs: dict[str, Any] = {
@@ -61,10 +56,30 @@ def create_engine_from_url(database_url: str | None = None) -> AsyncEngine:
                     pass
     else:
         # PostgreSQL / Neon configuration
-        # Handle sslmode parameter for asyncpg compatibility if needed
-        if "sslmode=require" in url:
-            url = url.replace("sslmode=require", "ssl=require")
-        
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        # Parse and sanitize query parameters for asyncpg compatibility
+        try:
+            parsed = urlsplit(url)
+            if parsed.query:
+                query_params = dict(parse_qsl(parsed.query))
+                cleaned_params: dict[str, str] = {}
+                for k, v in query_params.items():
+                    k_lower = k.lower()
+                    if k_lower == "sslmode":
+                        cleaned_params["ssl"] = "require"
+                    elif k_lower in ("channel_binding", "gssencmode", "target_session_attrs"):
+                        continue
+                    else:
+                        cleaned_params[k] = v
+                new_query = urlencode(cleaned_params)
+                url = urlunsplit((parsed.scheme, parsed.netloc, parsed.path, new_query, parsed.fragment))
+        except Exception:
+            pass
+
         # Serverless connection resilience for Neon / Cloud Postgres
         engine_kwargs["pool_pre_ping"] = True
         engine_kwargs["pool_recycle"] = 300
