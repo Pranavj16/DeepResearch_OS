@@ -28,4 +28,9 @@ def test_legacy_tool_accessors_use_typed_fields() -> None:
     assert configured.serper_api_key == "serper-key"
     assert configured.tavily_api_url == configured.TAVILY_API_URL
     assert configured.reader_chunk_size == configured.READER_CHUNK_SIZE
+def test_cors_origin_parsing() -> None:
+    """ALLOWED_ORIGINS must support empty string, raw strings, lists, and JSON."""
 
+    assert "*" in Settings(ALLOWED_ORIGINS="").ALLOWED_ORIGINS
+    assert "https://example.com" in Settings(ALLOWED_ORIGINS="https://example.com,https://app.com").ALLOWED_ORIGINS
+    assert "https://app.com" in Settings(ALLOWED_ORIGINS='["https://app.com"]').ALLOWED_ORIGINS

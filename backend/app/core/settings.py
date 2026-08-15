@@ -1,8 +1,8 @@
 from enum import StrEnum
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal, Union
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -168,8 +168,39 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3000",
             "http://localhost:8000",
             "http://127.0.0.1:8000",
+            "*",
         ]
     )
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        """Parse CORS allowed origins from JSON, comma-separated string, or list."""
+        if v is None or v == "":
+            return [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:8000",
+                "http://127.0.0.1:8000",
+                "*",
+            ]
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if not v_clean:
+                return ["*"]
+            if v_clean.startswith("[") and v_clean.endswith("]"):
+                try:
+                    import json
+
+                    parsed = json.loads(v_clean)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [i.strip() for i in v_clean.split(",") if i.strip()]
+        if isinstance(v, list):
+            return [str(i).strip() for i in v if str(i).strip()]
+        return ["*"]
 
     @property
     def tavily_api_key(self) -> str | None:
