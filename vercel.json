@@ -1,5 +1,13 @@
 {
   "version": 2,
+  "build": {
+    "env": {
+      "UV_LINK_MODE": "copy"
+    }
+  },
+  "env": {
+    "UV_LINK_MODE": "copy"
+  },
   "builds": [
     {
       "src": "backend/api/index.py",
